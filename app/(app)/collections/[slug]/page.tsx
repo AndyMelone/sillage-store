@@ -84,7 +84,7 @@ export default function CollectionDetailPage({
 
   const heroImage =
     (products.at(0)?.thumbnail as string) ||
-    (collection.metadata?.image as any) ||
+    (collection.metadata?.image as string) ||
     "/placeholders/sillage.png";
   const longDescription =
     (collection.metadata?.longDescription as string) ||

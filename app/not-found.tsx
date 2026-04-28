@@ -11,11 +11,11 @@ export default function NotFound() {
         Introuvable
       </h1>
       <p className="text-muted-foreground text-lg max-w-md mb-12">
-        La page que vous cherchez n'existe pas ou a été déplacée.
+        {"La page que vous cherchez n'existe pas ou a été déplacée."}
       </p>
       <div className="flex gap-4">
         <Button asChild className="rounded-full px-8 h-14 text-base">
-          <Link href="/">Retour à l'accueil</Link>
+          <Link href="/">{"Retour à l'accueil"}</Link>
         </Button>
         <Button asChild variant="outline" className="rounded-full px-8 h-14 text-base">
           <Link href="/parfums">Nos fragrances</Link>

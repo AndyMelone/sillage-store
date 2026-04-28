@@ -40,6 +40,86 @@ import { useCartStore } from "@/store/use-cart-store";
 import { useProductsStore } from "@/store/use-products-store";
 import { useWishlistStore } from "@/store/use-wishlist-store";
 
+const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+interface FilterSidebarProps {
+  collections: HttpTypes.StoreCollection[];
+  selectedCollections: string[];
+  toggleCollection: (id: string) => void;
+  priceRange: [number, number];
+  setPriceRange: (range: [number, number]) => void;
+  activeFiltersCount: number;
+  clearFilters: () => void;
+}
+
+function FilterSidebar({
+  collections,
+  selectedCollections,
+  toggleCollection,
+  priceRange,
+  setPriceRange,
+  activeFiltersCount,
+  clearFilters,
+}: FilterSidebarProps) {
+  return (
+    <div className="space-y-8">
+      {collections.length > 0 && (
+        <div>
+          <h3 className="font-serif text-lg mb-4">Collections</h3>
+          <div className="space-y-3">
+            {collections.map((col) => (
+              <div
+                key={col.id}
+                className="flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id={`collection-${col.id}`}
+                    checked={selectedCollections.includes(col.id)}
+                    onCheckedChange={() => toggleCollection(col.id)}
+                  />
+                  <label
+                    htmlFor={`collection-${col.id}`}
+                    className="text-sm text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    {col.title}
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h3 className="font-serif text-lg mb-4">Prix</h3>
+        <div className="px-2">
+          <Slider
+            value={priceRange}
+            onValueChange={(val) => {
+              if (Array.isArray(val)) setPriceRange([val[0], val[1]]);
+            }}
+            max={300000}
+            min={0}
+            step={5000}
+            className="mb-4"
+          />
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{priceRange[0]}XOF</span>
+            <span>{priceRange[1]}XOF</span>
+          </div>
+        </div>
+      </div>
+
+      {activeFiltersCount > 0 && (
+        <Button variant="outline" className="w-full" onClick={clearFilters}>
+          Réinitialiser les filtres
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function getPrice(product: HttpTypes.StoreProduct): number {
   const variant = product.variants?.sort((a, b) => {
     if (
@@ -82,7 +162,6 @@ export default function ParfumsPage() {
     priceRange,
     sortBy,
     viewMode,
-    quickViewProduct,
     fetchProducts,
     fetchCollections,
     setSortBy,
@@ -101,6 +180,7 @@ export default function ParfumsPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -160,65 +240,15 @@ export default function ParfumsPage() {
     selectedCollections.length +
     (priceRange[0] > 0 || priceRange[1] < 300000 ? 1 : 0);
 
-  const FilterSidebar = () => (
-    <div className="space-y-8">
-      {collections.length > 0 && (
-        <div>
-          <h3 className="font-serif text-lg mb-4">Collections</h3>
-          <div className="space-y-3">
-            {collections.map((col) => (
-              <div
-                key={col.id}
-                className="flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id={`collection-${col.id}`}
-                    checked={selectedCollections.includes(col.id)}
-                    onCheckedChange={() => toggleCollection(col.id)}
-                  />
-                  <label
-                    htmlFor={`collection-${col.id}`}
-                    className="text-sm text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    {col.title}
-                  </label>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Prix */}
-      <div>
-        <h3 className="font-serif text-lg mb-4">Prix</h3>
-        <div className="px-2">
-          <Slider
-            value={priceRange}
-            onValueChange={(val) => {
-              if (Array.isArray(val)) setPriceRange([val[0], val[1]]);
-            }}
-            max={300000}
-            min={0}
-            step={5000}
-            className="mb-4"
-          />
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{priceRange[0]}XOF</span>
-            <span>{priceRange[1]}XOF</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Reset */}
-      {activeFiltersCount > 0 && (
-        <Button variant="outline" className="w-full" onClick={clearFilters}>
-          Réinitialiser les filtres
-        </Button>
-      )}
-    </div>
-  );
+  const filterSidebarProps: FilterSidebarProps = {
+    collections,
+    selectedCollections,
+    toggleCollection,
+    priceRange,
+    setPriceRange,
+    activeFiltersCount,
+    clearFilters,
+  };
 
   return (
     <main className="min-h-screen bg-background">
@@ -258,7 +288,7 @@ export default function ParfumsPage() {
                     </span>
                   )}
                 </div>
-                <FilterSidebar />
+                <FilterSidebar {...filterSidebarProps} />
               </div>
             </aside>
 
@@ -291,7 +321,7 @@ export default function ParfumsPage() {
                       <SheetTitle className="font-serif">Filtres</SheetTitle>
                     </SheetHeader>
                     <div className="mt-6">
-                      <FilterSidebar />
+                      <FilterSidebar {...filterSidebarProps} />
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -409,8 +439,7 @@ export default function ParfumsPage() {
 
                     const price = getPrice(product);
                     const isNew = product.created_at
-                      ? new Date(product.created_at).getTime() >
-                        Date.now() - 30 * 24 * 60 * 60 * 1000
+                      ? new Date(product.created_at).getTime() > THIRTY_DAYS_AGO
                       : false;
 
                     const isWishlisted = mounted

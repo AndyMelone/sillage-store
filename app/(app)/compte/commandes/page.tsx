@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 import { listOrders } from "@/lib/data/customer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { ArrowLeft, Package, ChevronRight, Calendar, CreditCard } from "lucide-react";
+import { ArrowLeft, Package, ChevronRight, Calendar } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { HttpTypes } from "@medusajs/types";
@@ -21,6 +21,7 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
     checkAuth();
   }, [checkAuth]);
@@ -84,7 +85,7 @@ export default function OrdersPage() {
             <Card className="border-dashed border-2 p-12 text-center">
               <Package className="size-12 mx-auto text-zinc-200 mb-4" />
               <h2 className="text-xl font-serif mb-2">Aucune commande trouvée</h2>
-              <p className="text-muted-foreground mb-8">Vous n'avez pas encore passé de commande sur Sillage.</p>
+              <p className="text-muted-foreground mb-8">{"Vous n'avez pas encore passé de commande sur Sillage."}</p>
               <Button asChild className="rounded-full px-8">
                 <Link href="/parfums">Découvrir nos fragrances</Link>
               </Button>

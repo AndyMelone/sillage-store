@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
 import { getCustomer, addAddress, deleteAddress } from "@/lib/data/customer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { ArrowLeft, MapPin, Plus, Trash2, Home, Building2, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Trash2, Home, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { HttpTypes } from "@medusajs/types";
@@ -30,9 +30,10 @@ export default function AdressesPage() {
     postal_code: "",
     country_code: "fr",
     company: "",
-  } as any);
+  } as HttpTypes.StoreCustomerAddress);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
     checkAuth();
   }, [checkAuth]);
@@ -67,7 +68,7 @@ export default function AdressesPage() {
         city: "",
         postal_code: "",
         country_code: "fr",
-      } as any);
+      } as HttpTypes.StoreCustomerAddress);
     }
     setIsSaving(false);
   };

@@ -122,7 +122,7 @@ export default function CheckoutPage() {
     setIsLoading(true);
     const result = await completeCart();
     if (result) {
-      setOrder(result as any);
+      setOrder(result);
       setStep("success");
       await syncCart();
     } else {
@@ -631,7 +631,7 @@ export default function CheckoutPage() {
                     asChild
                     className="rounded-full px-12 h-14 text-lg shadow-xl shadow-zinc-200"
                   >
-                    <Link href="/">Retour à l'accueil</Link>
+                    <Link href="/">{"Retour à l'accueil"}</Link>
                   </Button>
                   <Button
                     variant="outline"
@@ -695,7 +695,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Livraison</span>
                       <span className="text-zinc-900 font-medium">
-                        Calculé à l'étape suivante
+                        {"Calculé à l'étape suivante"}
                       </span>
                     </div>
                     <Separator className="my-4" />

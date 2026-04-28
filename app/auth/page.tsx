@@ -297,7 +297,7 @@ function ConnexionForm() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
-                      Téléphone (Côte d'Ivoire)
+                      {"Téléphone (Côte d'Ivoire)"}
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
@@ -512,7 +512,7 @@ function ConnexionForm() {
                 <div className="w-20 h-20 bg-zinc-900 text-white rounded-full flex items-center justify-center mx-auto mb-8">
                   <Check className="w-10 h-10" />
                 </div>
-                <h2 className="text-3xl font-serif">C'est prêt !</h2>
+                <h2 className="text-3xl font-serif">{"C'est prêt !"}</h2>
                 <p className="text-muted-foreground">
                   Votre connexion a été établie avec succès.
                   <br />

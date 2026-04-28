@@ -160,7 +160,7 @@ export function CartDrawer() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Livraison</span>
                   <span className="text-zinc-400 italic">
-                    Calcule à l'étape suivante
+                    {"Calcule à l'étape suivante"}
                   </span>
                 </div>
                 <div className="pt-2 flex items-center justify-between font-serif text-lg">

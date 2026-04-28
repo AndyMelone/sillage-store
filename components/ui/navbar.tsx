@@ -101,6 +101,7 @@ export default function Navbar({
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     checkAuth();
 
@@ -199,7 +200,6 @@ export default function Navbar({
                     <MenuWithSubItems
                       item={item}
                       pathname={pathname}
-                      isScrolled={isScrolled}
                     />
                   ) : (
                     <Link
@@ -307,11 +307,9 @@ export default function Navbar({
 function MenuWithSubItems({
   item,
   pathname,
-  isScrolled,
 }: {
   item: MenuItem;
   pathname: string;
-  isScrolled: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const isActive = item.items?.some(
@@ -412,7 +410,7 @@ function MobileMenu({
   isAuthenticated,
 }: {
   menu: MenuItem[];
-  logo: any;
+  logo: NavbarProps["logo"];
   isAuthenticated: boolean;
 }) {
   return (

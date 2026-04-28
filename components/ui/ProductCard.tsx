@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useCartStore } from "@/store/use-cart-store";
 import { useProductsStore } from "@/store/use-products-store";
 import Image from "next/image";
 import { useState } from "react";
@@ -13,7 +12,6 @@ interface ProductCardProps {
   image1?: string | null;
   image2?: string | null;
   category?: string;
-  variantId?: string;
 }
 
 export function ProductCard({
@@ -23,32 +21,19 @@ export function ProductCard({
   image1,
   image2,
   category = "Eau de Parfum",
-  variantId,
 }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { currencyCode, decimalDigits } = useProductsStore();
-  const addItem = useCartStore((state) => state.addItem);
-  const isLoading = useCartStore((state) => state.isLoading);
-
   const finalImage1 = image1 || "/placeholders/sillage.png";
   const finalImage2 = image2 || "/placeholders/sillage.webp";
 
   const formatPrice = (amount: number) => {
-    // If decimalDigits is 0 (like XOF), we don't divide by 100
     const value = decimalDigits === 0 ? amount : amount / 100;
     return value.toLocaleString("fr-FR", {
       style: "currency",
       currency: currencyCode,
       maximumFractionDigits: decimalDigits,
     });
-  };
-
-  const handleQuickAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (variantId) {
-      addItem(variantId, 1);
-    }
   };
 
   return (

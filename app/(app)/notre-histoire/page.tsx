@@ -26,10 +26,10 @@ export default function NotreHistoirePage() {
           </h1>
           <div className="space-y-6 text-lg text-muted-foreground leading-relaxed max-w-xl">
             <p>
-              Chez <strong className="text-foreground font-medium">Sillage Parfums</strong>, notre objectif est de rendre la parfumerie <strong className="text-foreground font-medium">accessible à tous</strong>, y compris l'expérience de la parfumerie de niche, trop souvent réservée à une minorité.
+              Chez <strong className="text-foreground font-medium">Sillage Parfums</strong>, notre objectif est de rendre la parfumerie <strong className="text-foreground font-medium">accessible à tous</strong>, y compris {"l'"}expérience de la parfumerie de niche, trop souvent réservée à une minorité.
             </p>
             <p>
-              C'est pourquoi nous avons fait le choix de créer uniquement des inspirations de <strong className="text-foreground font-medium">parfums de niche</strong> et de collections privées. Sillage Parfums démocratise la niche en vous faisant payer <strong className="text-foreground font-medium italic">le jus, pas la marque.</strong>
+              {"C'est pourquoi nous avons fait le choix de créer uniquement des inspirations de"} <strong className="text-foreground font-medium">parfums de niche</strong> et de collections privées. Sillage Parfums démocratise la niche en vous faisant payer <strong className="text-foreground font-medium italic">le jus, pas la marque.</strong>
             </p>
           </div>
         </div>
@@ -46,7 +46,7 @@ export default function NotreHistoirePage() {
           </h2>
           <div className="space-y-10 text-xl text-muted-foreground leading-relaxed italic">
             <p>
-              "Pour y parvenir, nous investissons dans ce qui compte vraiment : des <strong className="text-foreground font-medium not-italic underline decoration-primary/30 underline-offset-4">huiles et matières premières de haute qualité</strong>."
+              {'"'}Pour y parvenir, nous investissons dans ce qui compte vraiment : des{' '}<strong className="text-foreground font-medium not-italic underline decoration-primary/30 underline-offset-4">huiles et matières premières de haute qualité</strong>.{'"'}
             </p>
             <p>
               Nous travaillons avec des laboratoires et fournisseurs exigeants afin de créer des inspirations de grands parfums avec une <strong className="text-foreground font-medium not-italic">ressemblance extrême</strong>.
@@ -70,14 +70,14 @@ export default function NotreHistoirePage() {
             La Qualité
           </span>
           <h2 className="font-serif text-3xl md:text-5xl tracking-tight text-foreground mb-8">
-            L'excellence du sillage.
+            {"L'excellence du sillage."}
           </h2>
           <div className="space-y-6 text-lg text-muted-foreground leading-relaxed max-w-xl">
             <p>
               Nous avons fait le choix de ne proposer que des <strong className="text-foreground font-medium">extrait de parfum</strong>, pour que chaque création soit plus dense, avec un beau sillage et une <strong className="text-foreground font-medium">excellente tenue</strong>.
             </p>
             <p>
-              Sillage Parfums, c'est l'élégance et le caractère de la niche, enfin rendus accessibles, pour que vous puissiez porter des parfums qui vous ressemblent.
+              {"Sillage Parfums, c'est l'élégance et le caractère de la niche, enfin rendus accessibles, pour que vous puissiez porter des parfums qui vous ressemblent."}
             </p>
             <div className="pt-8">
               <Link 
