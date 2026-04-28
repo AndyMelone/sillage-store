@@ -25,11 +25,8 @@ export function AboutSection() {
             exceptionnelles à des prix accessibles.
           </p>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            <span className="text-foreground font-medium">
-              La même qualité,
-            </span>{" "}
-            jusqu{"'"}à{" "}
-            <span className="text-accent font-semibold">90% moins cher.</span>
+            <span className=" font-medium">La même qualité,</span> jusqu{"'"}à{" "}
+            <span className=" font-semibold">90% moins cher.</span>
           </p>
         </motion.div>
 

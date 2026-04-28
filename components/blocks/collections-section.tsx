@@ -5,7 +5,6 @@ import Link from "next/link";
 
 export async function CollectionsSection() {
   const { collections } = await listCollections();
-
   if (collections.length === 0) return null;
 
   return (
@@ -21,11 +20,10 @@ export async function CollectionsSection() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {collections.map((collection) => {
-            // Utiliser metadata.image si disponible, sinon un placeholder
+          {collections.slice(0, 8).map((collection) => {
             const imageUrl =
-              (collection.metadata?.image as string) ||
-              "/images/collection-placeholder.jpg";
+              (collection.products?.at(1)?.thumbnail as string) ||
+              "/placeholders/sillage.png";
 
             return (
               <Link
@@ -46,7 +44,9 @@ export async function CollectionsSection() {
                     {collection.title}
                   </h3>
                   {(() => {
-                    const desc = collection.metadata?.description as string | undefined;
+                    const desc = collection.metadata?.description as
+                      | string
+                      | undefined;
                     return desc ? (
                       <p className="text-sm text-white/70 mb-3">{desc}</p>
                     ) : null;

@@ -1,5 +1,8 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+import { useCartStore } from "@/store/use-cart-store";
+import { useProductsStore } from "@/store/use-products-store";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -7,10 +10,10 @@ interface ProductCardProps {
   name: string;
   price: number;
   originalPrice?: number;
-  image1: string;
-  image2: string;
+  image1?: string | null;
+  image2?: string | null;
   category?: string;
-  currency?: string;
+  variantId?: string;
 }
 
 export function ProductCard({
@@ -20,55 +23,78 @@ export function ProductCard({
   image1,
   image2,
   category = "Eau de Parfum",
-  currency = "€",
+  variantId,
 }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { currencyCode, decimalDigits } = useProductsStore();
+  const addItem = useCartStore((state) => state.addItem);
+  const isLoading = useCartStore((state) => state.isLoading);
+
+  const finalImage1 = image1 || "/placeholders/sillage.png";
+  const finalImage2 = image2 || "/placeholders/sillage.webp";
+
+  const formatPrice = (amount: number) => {
+    // If decimalDigits is 0 (like XOF), we don't divide by 100
+    const value = decimalDigits === 0 ? amount : amount / 100;
+    return value.toLocaleString("fr-FR", {
+      style: "currency",
+      currency: currencyCode,
+      maximumFractionDigits: decimalDigits,
+    });
+  };
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (variantId) {
+      addItem(variantId, 1);
+    }
+  };
 
   return (
     <div
-      className="group cursor-pointer"
+      className="group cursor-pointer relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image Container */}
-      <div className="relative aspect-3/4 overflow-hidden bg-secondary mb-4">
-        {/* First Image */}
+      <div className="relative aspect-3/4 overflow-hidden bg-zinc-50 mb-4 rounded-2xl border border-zinc-100/50">
         <Image
-          src={image1}
+          src={finalImage1}
           alt={name}
           fill
-          className={`object-cover transition-opacity duration-500 ease-out ${
-            isHovered ? "opacity-0" : "opacity-100"
-          }`}
+          className={cn(
+            "object-cover transition-all duration-700 ease-out",
+            isHovered ? "opacity-0 scale-110" : "opacity-100 scale-100",
+          )}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        {/* Second Image */}
+
         <Image
-          src={image2}
+          src={finalImage2}
           alt={`${name} - vue alternative`}
           fill
-          className={`object-cover transition-opacity duration-500 ease-out ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
+          className={cn(
+            "object-cover transition-all duration-700 ease-out",
+            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90",
+          )}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
 
-      {/* Product Info */}
-      <div className="space-y-1">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
+      <div className="space-y-1 text-center">
+        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">
           {category}
         </p>
-        <h3 className="font-serif text-lg tracking-wide text-foreground group-hover:text-accent transition-colors duration-300">
+        <h3 className="font-serif text-xl tracking-wide text-zinc-900 group-hover:text-primary transition-colors">
           {name}
         </h3>
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-foreground">
-            {price.toFixed(2)} {currency}
+        <div className="flex items-center justify-center gap-2">
+          <p className="text-sm font-semibold text-zinc-900">
+            {formatPrice(price)}
           </p>
           {originalPrice && (
-            <p className="text-sm text-muted-foreground line-through">
-              {originalPrice.toFixed(2)} {currency}
+            <p className="text-sm text-zinc-400 line-through">
+              {formatPrice(originalPrice)}
             </p>
           )}
         </div>

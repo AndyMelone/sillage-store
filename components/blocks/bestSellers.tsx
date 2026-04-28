@@ -1,31 +1,28 @@
-import { HttpTypes } from "@medusajs/types";
-import { listProducts } from "@/lib/data/products";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { listProducts } from "@/lib/data/products";
+import { HttpTypes } from "@medusajs/types";
 import Link from "next/link";
 
-// ─── Helper : extraire le prix calculé d'un produit ─────
 function getProductPrice(product: HttpTypes.StoreProduct): number {
   const variant = product.variants?.[0];
   if (variant?.calculated_price?.calculated_amount) {
-    return variant.calculated_price.calculated_amount;
+    return variant.calculated_price.calculated_amount / 100;
   }
   return 0;
 }
 
-// ─── Helper : extraire les images ───────────────────────
 function getProductImages(product: HttpTypes.StoreProduct) {
   const images = product.images || [];
   return {
-    image1: product.thumbnail || images[0]?.url || "/images/placeholder.jpg",
-    image2: images[1]?.url || product.thumbnail || "/images/placeholder.jpg",
+    image1: product.thumbnail || images[0]?.url || "/placeholders/sillage.png",
+    image2: images[1]?.url || product.thumbnail || "/placeholders/sillage.webp",
   };
 }
 
 export async function BestSellersSection() {
-  // Charger les 6 premiers produits depuis Medusa
   const { response } = await listProducts({
     pageParam: 1,
-    queryParams: { limit: 6 },
+    queryParams: { limit: 3 },
   });
 
   const products = response.products;
@@ -54,7 +51,10 @@ export async function BestSellersSection() {
                   price={getProductPrice(product)}
                   image1={image1}
                   image2={image2}
-                  category={product.subtitle || product.collection?.title || "Parfum"}
+                  variantId={product.variants?.[0]?.id}
+                  category={
+                    product.subtitle || product.collection?.title || "Parfum"
+                  }
                 />
               </Link>
             );

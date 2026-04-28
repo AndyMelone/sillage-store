@@ -8,462 +8,407 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Spinner } from "@/components/ui/spinner";
-import { sendOtp, verifyOtp, resendOtp } from "@/lib/data/auth";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { 
+  checkPhone, 
+  loginWithPin, 
+  sendOtp, 
+  registerWithOtp, 
+  resetPin,
+  AuthMethod 
+} from "@/lib/data/auth";
+import { useAuthStore } from "@/store/use-auth-store";
+import { ArrowLeft, ArrowRight, Check, ShieldCheck, Key, Phone, UserPlus, History } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-type Step = "credentials" | "otp" | "success";
+type FlowState = 
+  | "phone_entry" 
+  | "pin_login" 
+  | "otp_verification" 
+  | "pin_creation" 
+  | "pin_reset" 
+  | "success";
+
+type FlowType = "login" | "registration" | "reset";
 
 export default function ConnexionPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("credentials");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [clientCode, setClientCode] = useState("");
-  const [otpValue, setOtpValue] = useState("");
-  const [otpMethod, setOtpMethod] = useState<"sms" | "whatsapp">("sms");
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  
+  // Navigation & UI State
+  const [step, setStep] = useState<FlowState>("phone_entry");
+  const [flowType, setFlowType] = useState<FlowType>("login");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Data State
+  const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpMethod, setOtpMethod] = useState<AuthMethod>("sms");
 
-  // Formater le numéro pour l'API (ex: "0700000000" → "+2250700000000")
+  // Helper: Format phone for API
   const getFullPhone = () => {
-    const digits = phoneNumber.replace(/\D/g, "");
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 10) return `+225${digits}`;
     if (digits.startsWith("225")) return `+${digits}`;
-    return `+225${digits}`;
+    return phone;
   };
 
-  const handleSendOTP = async () => {
-    if (!phoneNumber || !clientCode) {
-      setError("Veuillez remplir tous les champs");
+  const formatPhoneDisplay = (val: string) => {
+    const numbers = val.replace(/\D/g, "").slice(0, 10);
+    return numbers.replace(/(\d{2})(?=\d)/g, "$1 ");
+  };
+
+  const resetForm = () => {
+    setError("");
+    setPin("");
+    setOtp("");
+  };
+
+  // --- Actions ---
+
+  const handleCheckPhone = async () => {
+    if (phone.length < 10) {
+      setError("Veuillez entrer un numéro valide.");
       return;
     }
-
-    setError("");
     setIsLoading(true);
-
+    setError("");
     try {
-      await sendOtp({ phone: getFullPhone(), channel: otpMethod });
-      setStep("otp");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Impossible d'envoyer le code.";
-      setError(msg);
+      const res = await checkPhone(getFullPhone());
+      if (res.exists) {
+        setFlowType("login");
+        setStep("pin_login");
+      } else {
+        setFlowType("registration");
+        // For new account, we need to send OTP first
+        await handleSendOTP("new");
+      }
+    } catch (err: any) {
+      setError(err.message || "Erreur de connexion.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (pin.length < 4) {
+      setError("Le code PIN est trop court.");
+      return;
+    }
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await loginWithPin(getFullPhone(), pin);
+      if (res.token) {
+        setAuthenticated(getFullPhone(), res.token);
+        setStep("success");
+      }
+    } catch (err: any) {
+      setError("Code PIN incorrect.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSendOTP = async (type: "new" | "reset") => {
+    setIsLoading(true);
+    setError("");
+    try {
+      await sendOtp(getFullPhone(), otpMethod, type);
+      setStep("otp_verification");
+      if (type === "reset") setFlowType("reset");
+    } catch (err: any) {
+      setError(err.message || "Impossible d'envoyer le code.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOTP = async () => {
-    if (otpValue.length !== 6) {
-      setError("Veuillez entrer le code complet");
-      return;
-    }
-
-    setError("");
+    if (otp.length < 6) return;
     setIsLoading(true);
-
+    setError("");
     try {
-      const res = await verifyOtp({
-        phone: getFullPhone(),
-        otp: otpValue,
-        pin: clientCode,
-        action: "register",
-      });
-
-      // Stocker le token JWT pour les prochaines requêtes
-      if (res.token) {
-        document.cookie = `medusa_token=${res.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      // If registration, go to pin creation
+      if (flowType === "registration") {
+        setStep("pin_creation");
+      } else if (flowType === "reset") {
+        setStep("pin_reset");
       }
-
-      setStep("success");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Code invalide.";
-      setError(msg);
+    } catch (err: any) {
+      setError("Code invalide.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResendOTP = async () => {
+  const handleCompleteRegistration = async () => {
+    if (pin.length < 4) return;
     setIsLoading(true);
-    setError("");
     try {
-      await resendOtp({ phone: getFullPhone(), channel: otpMethod });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Impossible de renvoyer le code.";
-      setError(msg);
+      const res = await registerWithOtp(getFullPhone(), otp, pin);
+      setAuthenticated(getFullPhone(), res.token);
+      setStep("success");
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la création.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers.slice(0, 10);
+  const handleCompleteReset = async () => {
+    if (pin.length < 4) return;
+    setIsLoading(true);
+    try {
+      const res = await resetPin(getFullPhone(), otp, pin);
+      setAuthenticated(getFullPhone(), res.token);
+      setStep("success");
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la réinitialisation.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const formatPhoneDisplay = (phone: string) => {
-    return phone.replace(/(\d{2})(?=\d)/g, "$1 ");
-  };
+  // --- UI Components ---
+
+  const Header = ({ title, subtitle, icon: Icon }: any) => (
+    <div className="mb-8">
+      {Icon && (
+        <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center mb-4 text-foreground">
+          <Icon className="w-6 h-6" />
+        </div>
+      )}
+      <h2 className="text-3xl font-serif mb-2">{title}</h2>
+      <p className="text-muted-foreground">{subtitle}</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-foreground text-background flex-col justify-between p-12">
-        <div>
-          <Link href="/" className="inline-block">
-            <Image
-              width={100}
-              height={100}
-              src="/logo/sillage.webp"
-              className="w-20 rounded-full"
-              alt="sillage logo"
-            />
-          </Link>
-        </div>
-
-        <div className="max-w-md">
-          <h2 className="text-4xl font-semibold leading-tight mb-6 text-balance">
-            Connectez-vous pour acceder a votre espace client
-          </h2>
-          <p className="text-muted-foreground text-lg">
-            Gerez vos commandes, suivez vos livraisons et profitez de nos
-            services exclusifs.
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      {/* Sidebar Branding */}
+      <div className="hidden lg:flex lg:w-[40%] bg-zinc-950 text-white p-12 flex-col justify-between">
+        <Link href="/" className="opacity-80 hover:opacity-100 transition-opacity">
+           <span className="text-2xl font-serif tracking-widest">SILLAGE</span>
+        </Link>
+        <div className="space-y-6">
+          <h1 className="text-5xl font-serif leading-tight">
+            Votre voyage <br />
+            olfactif commence <br />
+            ici.
+          </h1>
+          <p className="text-zinc-400 text-lg max-w-sm">
+            Accédez à vos fragrances préférées et gérez votre collection personnelle.
           </p>
         </div>
-
-        <div className="flex items-center gap-8 text-sm text-muted-foreground">
-          <Link
-            href="/aide"
-            className="hover:text-background transition-colors"
-          >
-            Aide
-          </Link>
-          <Link
-            href="/contact"
-            className="hover:text-background transition-colors"
-          >
-            Contact
-          </Link>
-          <Link
-            href="/confidentialite"
-            className="hover:text-background transition-colors"
-          >
-            Confidentialite
-          </Link>
+        <div className="flex gap-6 text-xs text-zinc-500 uppercase tracking-widest">
+          <Link href="/aide">Aide</Link>
+          <Link href="/terms">CGU</Link>
+          <Link href="/privacy">Privacy</Link>
         </div>
       </div>
 
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+      {/* Main Form Area */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-20 relative overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-zinc-100 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2 opacity-50" />
+        
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Link href="/" className="inline-block">
-              <h1 className="text-2xl font-semibold tracking-tight">SILLAGE</h1>
-            </Link>
-          </div>
-
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center gap-3 mb-10">
-            <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                step === "credentials"
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {step !== "credentials" ? <Check className="w-4 h-4" /> : "1"}
-            </div>
-            <div className="w-12 h-px bg-border" />
-            <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                step === "otp"
-                  ? "bg-foreground text-background"
-                  : step === "success"
-                    ? "bg-muted text-muted-foreground"
-                    : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {step === "success" ? <Check className="w-4 h-4" /> : "2"}
-            </div>
-            <div className="w-12 h-px bg-border" />
-            <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                step === "success"
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              3
-            </div>
-          </div>
-
           <AnimatePresence mode="wait">
-            {/* Step 1: Credentials */}
-            {step === "credentials" && (
+            
+            {/* 1. Entrée du numéro */}
+            {step === "phone_entry" && (
               <motion.div
-                key="credentials"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                key="phone"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-8"
               >
-                <div className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-2">
-                    Identifiez-vous
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Entrez votre numero de telephone et votre code client.
-                  </p>
-                </div>
-
-                <div className="space-y-5">
+                <Header 
+                  title="Bienvenue" 
+                  subtitle="Entrez votre numéro de téléphone pour continuer." 
+                  icon={Phone}
+                />
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      NUMERO DE TELEPHONE
-                    </label>
-                    <Input
-                      type="tel"
-                      placeholder="06 12 34 56 78"
-                      value={formatPhoneDisplay(phoneNumber)}
-                      onChange={(e) =>
-                        setPhoneNumber(formatPhoneNumber(e.target.value))
-                      }
-                      className="h-12 bg-background border-input"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      CODE DE SÉCURITÉ (PIN)
-                    </label>
-                    <Input
-                      type="password"
-                      placeholder="1234"
-                      maxLength={8}
-                      value={clientCode}
-                      onChange={(e) =>
-                        setClientCode(e.target.value.replace(/\D/g, ""))
-                      }
-                      className="h-12 bg-background border-input"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      RECEVOIR LE CODE PAR
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setOtpMethod("sms")}
-                        className={`flex items-center justify-center gap-2 p-4 rounded-lg border transition-all ${
-                          otpMethod === "sms"
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-input hover:border-foreground/50"
-                        }`}
-                      >
-                        <span className="text-sm font-medium">SMS</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOtpMethod("whatsapp")}
-                        className={`flex items-center justify-center gap-2 p-4 rounded-lg border transition-all ${
-                          otpMethod === "whatsapp"
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-input hover:border-foreground/50"
-                        }`}
-                      >
-                        <span className="text-sm font-medium">WhatsApp</span>
-                      </button>
+                    <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">Téléphone (Côte d'Ivoire)</label>
+                    <div className="relative">
+                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">+225</span>
+                       <Input 
+                         type="tel"
+                         placeholder="07 00 00 00 00"
+                         value={formatPhoneDisplay(phone)}
+                         onChange={(e) => setPhone(e.target.value)}
+                         className="pl-16 h-14 text-lg border-zinc-200 focus:border-zinc-900 transition-all rounded-xl"
+                       />
                     </div>
                   </div>
-
-                  {error && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-destructive text-sm"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-
-                  <Button
-                    onClick={handleSendOTP}
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <Button 
+                    onClick={handleCheckPhone}
                     disabled={isLoading}
-                    className="w-full h-12 bg-foreground hover:bg-foreground/90 text-background font-medium"
+                    className="w-full h-14 rounded-xl text-md font-medium"
                   >
-                    {isLoading ? (
-                      <Spinner className="w-5 h-5" />
-                    ) : (
-                      <>
-                        Recevoir le code
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
+                    {isLoading ? <Spinner /> : "Continuer"}
                   </Button>
                 </div>
-
-                <p className="text-center text-sm text-muted-foreground mt-8">
-                  Pas encore client ?{" "}
-                  <Link
-                    href="/inscription"
-                    className="text-foreground font-medium hover:underline"
-                  >
-                    Creer un compte
-                  </Link>
-                </p>
               </motion.div>
             )}
 
-            {/* Step 2: OTP Verification */}
-            {step === "otp" && (
+            {/* 2. Login avec PIN */}
+            {step === "pin_login" && (
+              <motion.div
+                key="pin_login"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-8"
+              >
+                <button onClick={() => setStep("phone_entry")} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4 group">
+                  <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                  <span className="text-sm">Changer de numéro</span>
+                </button>
+                <Header 
+                  title="Code Secret" 
+                  subtitle={`Entrez votre code pour le ${formatPhoneDisplay(phone)}.`} 
+                  icon={ShieldCheck}
+                />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">Votre code PIN</label>
+                    <Input 
+                      type="password"
+                      placeholder="••••"
+                      maxLength={8}
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                      className="h-14 text-2xl tracking-[0.5em] text-center border-zinc-200 focus:border-zinc-900 transition-all rounded-xl"
+                    />
+                  </div>
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <Button onClick={handleLogin} disabled={isLoading} className="w-full h-14 rounded-xl">
+                    {isLoading ? <Spinner /> : "Se connecter"}
+                  </Button>
+                  <button 
+                    onClick={() => handleSendOTP("reset")}
+                    className="w-full text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors py-2"
+                  >
+                    Code oublié ? Réinitialiser par OTP
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 3. OTP Verification */}
+            {step === "otp_verification" && (
               <motion.div
                 key="otp"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-8"
               >
-                <button
-                  onClick={() => {
-                    setStep("credentials");
-                    setOtpValue("");
-                    setError("");
-                  }}
-                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="text-sm">Retour</span>
-                </button>
-
-                <div className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-2">Verification</h2>
-                  <p className="text-muted-foreground">
-                    Un code a 6 chiffres a ete envoye par{" "}
-                    <span className="font-medium text-foreground">
-                      {otpMethod === "sms" ? "SMS" : "WhatsApp"}
-                    </span>{" "}
-                    au{" "}
-                    <span className="font-medium text-foreground">
-                      {formatPhoneDisplay(phoneNumber)}
-                    </span>
-                  </p>
-                </div>
-
+                <Header 
+                  title="Vérification" 
+                  subtitle={`Nous avons envoyé un code au ${formatPhoneDisplay(phone)} via ${otpMethod}.`} 
+                  icon={Key}
+                />
                 <div className="space-y-6">
                   <div className="flex justify-center">
-                    <InputOTP
-                      maxLength={6}
-                      value={otpValue}
-                      onChange={(value) => setOtpValue(value)}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} className="w-12 h-14 text-lg" />
-                        <InputOTPSlot index={1} className="w-12 h-14 text-lg" />
-                        <InputOTPSlot index={2} className="w-12 h-14 text-lg" />
-                        <InputOTPSlot index={3} className="w-12 h-14 text-lg" />
-                        <InputOTPSlot index={4} className="w-12 h-14 text-lg" />
-                        <InputOTPSlot index={5} className="w-12 h-14 text-lg" />
+                    <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                      <InputOTPGroup className="gap-2">
+                        {[0,1,2,3,4,5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="w-12 h-14 text-xl border-zinc-200 rounded-lg" />
+                        ))}
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
 
-                  {error && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-destructive text-sm text-center"
+                  <div className="space-y-4">
+                    <Button 
+                      onClick={handleVerifyOTP} 
+                      disabled={isLoading || otp.length < 6}
+                      className="w-full h-14 rounded-xl"
                     >
-                      {error}
-                    </motion.p>
-                  )}
-
-                  <Button
-                    onClick={handleVerifyOTP}
-                    disabled={isLoading || otpValue.length !== 6}
-                    className="w-full h-12 bg-foreground hover:bg-foreground/90 text-background font-medium"
-                  >
-                    {isLoading ? (
-                      <Spinner className="w-5 h-5" />
-                    ) : (
-                      "Verifier le code"
-                    )}
-                  </Button>
-
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {"Vous n'avez pas recu le code ?"}
-                    </p>
-                    <button
-                      onClick={handleResendOTP}
-                      disabled={isLoading}
-                      className="text-foreground font-medium text-sm hover:underline disabled:opacity-50"
-                    >
-                      Renvoyer le code
-                    </button>
+                      {isLoading ? <Spinner /> : "Vérifier le code"}
+                    </Button>
+                    <div className="flex flex-col gap-3 items-center">
+                       <p className="text-xs text-muted-foreground tracking-wide">RECEVOIR PAR</p>
+                       <div className="flex gap-2">
+                          <button onClick={() => setOtpMethod("sms")} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${otpMethod === "sms" ? "bg-zinc-900 text-white" : "text-zinc-500 hover:border-zinc-300"}`}>SMS</button>
+                          <button onClick={() => setOtpMethod("whatsapp")} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${otpMethod === "whatsapp" ? "bg-zinc-900 text-white" : "text-zinc-500 hover:border-zinc-300"}`}>WHATSAPP</button>
+                       </div>
+                       <button onClick={() => handleSendOTP(flowType === "reset" ? "reset" : "new")} className="text-sm font-medium underline mt-2">Renvoyer un code</button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 3: Success */}
+            {/* 4. PIN Creation / Reset */}
+            {(step === "pin_creation" || step === "pin_reset") && (
+              <motion.div
+                key="pin_create"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-8"
+              >
+                <Header 
+                  title={step === "pin_creation" ? "Nouveau Compte" : "Réinitialisation"} 
+                  subtitle="Choisissez un code secret de 4 à 8 chiffres pour sécuriser votre accès." 
+                  icon={step === "pin_creation" ? UserPlus : History}
+                />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">Nouveau code PIN</label>
+                    <Input 
+                      type="password"
+                      placeholder="••••"
+                      maxLength={8}
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                      className="h-14 text-2xl tracking-[0.5em] text-center border-zinc-200 focus:border-zinc-900 transition-all rounded-xl"
+                    />
+                  </div>
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <Button 
+                    onClick={step === "pin_creation" ? handleCompleteRegistration : handleCompleteReset} 
+                    disabled={isLoading || pin.length < 4} 
+                    className="w-full h-14 rounded-xl"
+                  >
+                    {isLoading ? <Spinner /> : "Confirmer"}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 5. Success */}
             {step === "success" && (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="text-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center space-y-6"
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.2 }}
-                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-foreground text-background mb-6"
-                >
-                  <Check className="w-8 h-8" />
-                </motion.div>
-
-                <h2 className="text-2xl font-semibold mb-2">
-                  Connexion reussie
-                </h2>
-                <p className="text-muted-foreground mb-8">
-                  Bienvenue sur votre espace client.
-                </p>
-
-                <Button
-                  onClick={() => router.push("/compte")}
-                  className="w-full h-12 bg-foreground hover:bg-foreground/90 text-background font-medium"
-                >
-                  Acceder a mon compte
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                <div className="w-20 h-20 bg-zinc-900 text-white rounded-full flex items-center justify-center mx-auto mb-8">
+                  <Check className="w-10 h-10" />
+                </div>
+                <h2 className="text-3xl font-serif">C'est prêt !</h2>
+                <p className="text-muted-foreground">Votre connexion a été établie avec succès. <br /> Redirection en cours...</p>
+                <Button onClick={() => router.push("/compte")} className="w-full h-14 rounded-xl">
+                  Accéder à mon compte
                 </Button>
               </motion.div>
             )}
-          </AnimatePresence>
 
-          {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-10">
-            En vous connectant, vous acceptez nos{" "}
-            <Link
-              href="/conditions"
-              className="underline hover:text-foreground"
-            >
-              conditions generales
-            </Link>{" "}
-            et notre{" "}
-            <Link
-              href="/confidentialite"
-              className="underline hover:text-foreground"
-            >
-              politique de confidentialite
-            </Link>
-          </p>
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -2,134 +2,143 @@
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Spinner } from "@/components/ui/spinner";
 import { useCartStore } from "@/store/use-cart-store";
 import { Minus, Plus, ShoppingBag, ShoppingCart, Trash2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export function CartDrawer() {
-  const {
-    isOpen,
-    closeCart,
-    items,
-    removeItem,
-    updateQuantity,
-  } = useCartStore();
+  const { isOpen, closeCart, items, removeItem, updateQuantity, isLoading } =
+    useCartStore();
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
-      <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">
-        <SheetHeader className="border-b pb-4">
-          <SheetTitle className="flex items-center gap-2 text-lg font-semibold">
-            <ShoppingCart className="size-4" />
-            Votre Panier
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col sm:max-w-md p-0 gap-0"
+      >
+        <SheetHeader className="p-6 border-b">
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2 text-xl font-serif">
+              <ShoppingCart className="size-5" />
+              Mon Panier
+            </SheetTitle>
             {totalItems > 0 && (
-              <span className="ml-1 rounded-full bg-foreground px-2 py-0.5 text-xs text-background">
-                {totalItems}
+              <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white">
+                {totalItems} {totalItems === 1 ? "article" : "articles"}
               </span>
             )}
-          </SheetTitle>
+          </div>
           <SheetDescription className="sr-only">
             Consultez et gerez les articles de votre panier
           </SheetDescription>
         </SheetHeader>
 
         {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-            <div className="rounded-full bg-muted p-6">
-              <ShoppingBag className="size-10 text-muted-foreground" />
+          <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center p-6">
+            <div className="w-24 h-24 rounded-full bg-zinc-50 flex items-center justify-center">
+              <ShoppingBag className="size-10 text-zinc-300" />
             </div>
-            <div>
-              <p className="text-lg font-medium">Votre panier est vide</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Ajoutez des articles pour commencer votre commande
+            <div className="space-y-2">
+              <p className="text-xl font-serif">Votre panier est vide</p>
+              <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                Explorez nos collections et trouvez votre sillage signature.
               </p>
             </div>
-            <Button onClick={closeCart} variant="outline" className="mt-4">
-              Continuer mes achats
+            <Button
+              onClick={closeCart}
+              variant="outline"
+              className="mt-4 rounded-full px-8"
+            >
+              Découvrir les parfums
             </Button>
           </div>
         ) : (
           <>
-            <ScrollArea className="flex-1 py-4">
-              <div className="flex flex-col gap-4">
+            <ScrollArea className="flex-1 px-6">
+              <div className="flex flex-col gap-6 py-6">
                 {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-4 rounded-lg border bg-card p-3"
-                  >
-                    {item.image ? (
-                      <div className="size-20 shrink-0 overflow-hidden rounded-md bg-muted">
-                        <img
+                  <div key={item.id} className="flex gap-4 group">
+                    <div className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-zinc-50 border border-zinc-100">
+                      {item.image ? (
+                        <Image
                           src={item.image}
                           alt={item.name}
-                          className="size-full object-cover"
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
                         />
-                      </div>
-                    ) : (
-                      <div className="flex size-20 shrink-0 items-center justify-center rounded-md bg-muted">
-                        <ShoppingBag className="size-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="flex flex-1 flex-col justify-between">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="font-medium leading-tight">
+                      ) : (
+                        <div className="flex size-full items-center justify-center">
+                          <ShoppingBag className="size-8 text-zinc-200" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-1 flex-col justify-between py-0.5">
+                      <div className="space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-serif text-base leading-tight group-hover:text-primary transition-colors">
                             {item.name}
                           </h4>
-                          <p className="mt-0.5 text-sm text-muted-foreground">
-                            {item.price.toLocaleString("fr-FR", {
-                              style: "currency",
-                              currency: "EUR",
-                            })}
-                          </p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-6 -mr-2 text-zinc-300 hover:text-red-500 hover:bg-transparent"
+                            onClick={() => removeItem(item.id)}
+                            disabled={isLoading}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="size-4" />
-                          <span className="sr-only">Supprimer</span>
-                        </Button>
+                        <p className="text-sm font-medium">
+                          {item.price.toLocaleString("fr-FR", {
+                            style: "currency",
+                            currency: "XOF",
+                          })}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-8"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                        >
-                          <Minus className="size-3" />
-                          <span className="sr-only">Diminuer la quantite</span>
-                        </Button>
-                        <span className="w-8 text-center text-sm font-medium">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-8"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
-                        >
-                          <Plus className="size-3" />
-                          <span className="sr-only">Augmenter la quantite</span>
-                        </Button>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center border rounded-full px-1 py-0.5 border-zinc-200">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 rounded-full hover:bg-zinc-100"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                            disabled={isLoading}
+                          >
+                            <Minus className="size-3" />
+                          </Button>
+                          <span className="w-6 text-center text-xs font-semibold">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 rounded-full hover:bg-zinc-100"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            disabled={isLoading}
+                          >
+                            <Plus className="size-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -137,44 +146,58 @@ export function CartDrawer() {
               </div>
             </ScrollArea>
 
-            <div className="border-t pt-4">
-              <div className="flex flex-col gap-2">
+            <div className="p-6 border-t bg-zinc-50/50 space-y-4">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
-                  <span>
+                  <span className="font-medium">
                     {totalPrice.toLocaleString("fr-FR", {
                       style: "currency",
-                      currency: "EUR",
+                      currency: "XOF",
                     })}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Livraison</span>
-                  <span className="text-muted-foreground">
-                    Calcule a la commande
+                  <span className="text-zinc-400 italic">
+                    Calcule à l'étape suivante
                   </span>
                 </div>
-                <Separator className="my-2" />
-                <div className="flex items-center justify-between font-semibold">
+                <div className="pt-2 flex items-center justify-between font-serif text-lg">
                   <span>Total</span>
                   <span>
                     {totalPrice.toLocaleString("fr-FR", {
                       style: "currency",
-                      currency: "EUR",
+                      currency: "XOF",
                     })}
                   </span>
                 </div>
               </div>
-            </div>
 
-            <SheetFooter className="flex flex-col gap-2 border-t pt-4">
-              <Button className="w-full" size="lg">
-                Passer la commande
-              </Button>
-              <Button variant="outline" className="w-full" onClick={closeCart}>
-                Continuer mes achats
-              </Button>
-            </SheetFooter>
+              <div className="flex flex-col gap-2">
+                <Button
+                  className="w-full h-12 rounded-full text-base font-medium shadow-lg shadow-zinc-200"
+                  size="lg"
+                  asChild
+                  disabled={isLoading}
+                >
+                  <Link href="/checkout" onClick={closeCart}>
+                    {isLoading ? (
+                      <Spinner className="mr-2" />
+                    ) : (
+                      "Passer à la commande"
+                    )}
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full h-10 text-muted-foreground hover:text-foreground"
+                  onClick={closeCart}
+                >
+                  Continuer mes achats
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </SheetContent>

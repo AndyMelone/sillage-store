@@ -10,48 +10,47 @@ let cachedRegionId: string | null = null;
 async function getDefaultRegionId(): Promise<string> {
   if (cachedRegionId) return cachedRegionId;
   const regions = await listRegions();
-  if (regions.length === 0) throw new Error("Aucune région configurée dans Medusa.");
+  if (regions.length === 0)
+    throw new Error("Aucune région configurée dans Medusa.");
   cachedRegionId = regions[0].id;
   return cachedRegionId;
 }
 
-// ─── Récupérer un produit par ID ────────────────────────
-export const retrieveProduct = async (id: string, queryParams?: HttpTypes.StoreProductParams) => {
+export const retrieveProduct = async (
+  id: string,
+  queryParams?: HttpTypes.StoreProductParams,
+) => {
   const region_id = await getDefaultRegionId();
   return sdk.client
-    .fetch<{ product: HttpTypes.StoreProduct }>(
-      `/store/products/${id}`,
-      {
-        query: {
-          region_id,
-          fields: "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
-          ...queryParams,
-        },
-        cache: "force-cache",
-      }
-    )
+    .fetch<{ product: HttpTypes.StoreProduct }>(`/store/products/${id}`, {
+      query: {
+        region_id,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
+        ...queryParams,
+      },
+      cache: "force-cache",
+    })
     .then(({ product }) => product);
 };
 
-// ─── Récupérer un produit par handle (slug) ─────────────
-export const getProductByHandle = async (handle: string): Promise<HttpTypes.StoreProduct | null> => {
+export const getProductByHandle = async (
+  handle: string,
+): Promise<HttpTypes.StoreProduct | null> => {
   const region_id = await getDefaultRegionId();
   return sdk.client
-    .fetch<{ products: HttpTypes.StoreProduct[] }>(
-      `/store/products`,
-      {
-        query: {
-          handle,
-          region_id,
-          fields: "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
-        },
-        cache: "force-cache",
-      }
-    )
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      query: {
+        handle,
+        region_id,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
+      },
+      cache: "force-cache",
+    })
     .then(({ products }) => products[0] || null);
 };
 
-// ─── Lister les produits (paginé) ───────────────────────
 export const listProducts = async ({
   pageParam = 1,
   queryParams,
@@ -77,11 +76,12 @@ export const listProducts = async ({
           limit,
           offset,
           region_id,
-          fields: "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
+          fields:
+            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
           ...queryParams,
         },
-        cache: "force-cache",
-      }
+        // cache: "force-cache",
+      },
     )
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null;
@@ -97,24 +97,64 @@ export const listProducts = async ({
     });
 };
 
-// ─── Lister les produits d'une collection ────────────────
 export const listProductsByCollectionId = async (
   collectionId: string,
-  limit: number = 12
+  limit: number = 12,
 ): Promise<HttpTypes.StoreProduct[]> => {
   const region_id = await getDefaultRegionId();
   return sdk.client
-    .fetch<{ products: HttpTypes.StoreProduct[] }>(
-      `/store/products`,
-      {
-        query: {
-          collection_id: [collectionId],
-          limit,
-          region_id,
-          fields: "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
-        },
-        cache: "force-cache",
-      }
-    )
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      query: {
+        collection_id: [collectionId],
+        limit,
+        region_id,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags",
+      },
+      cache: "force-cache",
+    })
+    .then(({ products }) => products);
+};
+
+export const searchProducts = async (
+  query: string,
+  limit: number = 5,
+): Promise<HttpTypes.StoreProduct[]> => {
+  if (!query || query.length < 2) return [];
+  const region_id = await getDefaultRegionId();
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      method: "GET",
+      query: {
+        q: query,
+        limit,
+        region_id,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,*collection",
+      },
+      cache: "no-store",
+    })
+    .then(({ products }) => products)
+    .catch((err) => {
+      console.error("Search products error:", err);
+      return [];
+    });
+};
+
+export const listProductsByIds = async (
+  ids: string[],
+): Promise<HttpTypes.StoreProduct[]> => {
+  if (ids.length === 0) return [];
+  const region_id = await getDefaultRegionId();
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      query: {
+        id: ids,
+        region_id,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,*collection",
+      },
+      cache: "no-store",
+    })
     .then(({ products }) => products);
 };

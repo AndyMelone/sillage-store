@@ -11,7 +11,6 @@ export function FeaturedProductSection() {
     <section className="py-20 bg-secondary">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Image */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -27,7 +26,6 @@ export function FeaturedProductSection() {
             />
           </motion.div>
 
-          {/* Content */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -72,7 +70,7 @@ export function FeaturedProductSection() {
 
             <div className="flex items-center gap-6">
               <span className="font-serif text-3xl text-foreground">
-                245,00 €
+                245,00 XOF
               </span>
               <Button
                 asChild

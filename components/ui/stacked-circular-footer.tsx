@@ -1,84 +1,60 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
+"use client";
+
+import { Facebook, Instagram, Twitter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-function StackedCircularFooter() {
+export function StackedCircularFooter() {
   return (
-    <footer className="bg-background py-12">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="flex flex-col items-center">
-          <div className="flex-1 flex justify-start my-4">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                width={100}
-                height={100}
-                src="/logo/sillage.webp"
-                className="w-16 rounded-full"
-                alt="logo"
-              />
-            </Link>
+    <footer className="bg-background border-t border-zinc-100 py-16">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col items-center">
+        {/* Logo Section */}
+        <Link href="/" className="group flex flex-col items-center gap-4 mb-10">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden border border-zinc-50 shadow-sm transition-transform group-hover:scale-105">
+            <Image
+              src="/logo/sillage.webp"
+              alt="Sillage"
+              fill
+              className="object-cover"
+            />
           </div>
+          <span className="font-serif text-3xl tracking-[0.4em] text-zinc-900 font-light">
+            SILLAGE
+          </span>
+        </Link>
 
-          <nav className="mb-8 flex flex-wrap justify-center gap-6">
-            <a href="#" className="hover:text-primary">
-              Home
-            </a>
-            <a href="#" className="hover:text-primary">
-              About
-            </a>
-            <a href="#" className="hover:text-primary">
-              Services
-            </a>
-            <a href="#" className="hover:text-primary">
-              Products
-            </a>
-            <a href="#" className="hover:text-primary">
-              Contact
-            </a>
-          </nav>
-          <div className="mb-8 flex space-x-4">
-            <Button variant="outline" size="icon" className="rounded-full">
-              <Facebook className="h-4 w-4" />
-              <span className="sr-only">Facebook</span>
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full">
-              <Twitter className="h-4 w-4" />
-              <span className="sr-only">Twitter</span>
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full">
-              <Instagram className="h-4 w-4" />
-              <span className="sr-only">Instagram</span>
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full">
-              <Linkedin className="h-4 w-4" />
-              <span className="sr-only">LinkedIn</span>
-            </Button>
-          </div>
-          <div className="mb-8 w-full max-w-md">
-            <form className="flex space-x-2">
-              <div className="grow">
-                <Label htmlFor="email" className="sr-only">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  placeholder="Enter your email"
-                  type="email"
-                  className="rounded-full"
-                />
-              </div>
-              <Button type="submit" className="rounded-full">
-                Subscribe
-              </Button>
-            </form>
-          </div>
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Sillage Parfumerie. Tous droits réservés.
-            </p>
+        {/* Navigation Simple */}
+        <nav className="flex flex-wrap justify-center gap-x-10 gap-y-4 mb-10">
+          <FooterLink href="/parfums">Parfums</FooterLink>
+          <FooterLink href="/collections">Collections</FooterLink>
+          <FooterLink href="/notre-histoire">Histoire</FooterLink>
+        </nav>
+
+        {/* Socials */}
+        <div className="flex items-center gap-8 mb-12">
+          <SocialIcon icon={<Instagram className="size-5" />} href="#" />
+          <SocialIcon icon={<Facebook className="size-5" />} href="#" />
+          <SocialIcon icon={<Twitter className="size-5" />} href="#" />
+        </div>
+
+        {/* Bottom */}
+        <div className="text-center space-y-4">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-zinc-400 font-medium">
+            © 2026 SILLAGE PARFUMERIE • DAKAR
+          </p>
+          <div className="flex justify-center gap-6 text-[9px] uppercase tracking-widest text-zinc-300">
+            <Link
+              href="/mentions-legales"
+              className="hover:text-zinc-500 transition-colors"
+            >
+              Légal
+            </Link>
+            <Link
+              href="/confidentialite"
+              className="hover:text-zinc-500 transition-colors"
+            >
+              Confidentialité
+            </Link>
           </div>
         </div>
       </div>
@@ -86,4 +62,30 @@ function StackedCircularFooter() {
   );
 }
 
-export { StackedCircularFooter };
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="text-xs uppercase tracking-widest font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function SocialIcon({ icon, href }: { icon: React.ReactNode; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="text-zinc-400 hover:text-zinc-900 transition-colors"
+    >
+      {icon}
+    </Link>
+  );
+}

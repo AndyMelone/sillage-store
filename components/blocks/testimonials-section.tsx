@@ -16,7 +16,7 @@ const testimonials = [
       "Ce parfum est incroyable ! L'odeur est riche, boisée et légèrement épicée. La tenue est excellente. Franchement, pour ce prix, c'est un vrai coup de cœur.",
     author: "Lionel M.",
     product: "Oud Mystique",
-    rating: 5,
+    rating: 4,
   },
   {
     quote:
@@ -60,7 +60,11 @@ export function TestimonialsSection() {
 
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-accent text-accent" />
+                  <Star
+                    key={i}
+                    color="black"
+                    className="h-4 w-4 fill-accent text-accent"
+                  />
                 ))}
               </div>
 

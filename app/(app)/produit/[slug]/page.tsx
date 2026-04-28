@@ -5,8 +5,8 @@ import { notFound } from "next/navigation";
 import { ProductActions } from "@/components/product-actions";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { ProductGallery } from "@/components/ui/ProductGallery";
-import { ArrowLeft } from "lucide-react";
 import type { HttpTypes } from "@medusajs/types";
+import { ArrowLeft } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────
 function getPrice(product: HttpTypes.StoreProduct): number {
@@ -33,7 +33,10 @@ function getNotesFromMetadata(product: HttpTypes.StoreProduct) {
   const parseNotes = (key: string): string[] => {
     const raw = getMetadata(product, key);
     if (!raw) return [];
-    return raw.split(",").map((n) => n.trim()).filter(Boolean);
+    return raw
+      .split(",")
+      .map((n) => n.trim())
+      .filter(Boolean);
   };
   return {
     top: parseNotes("notes_top"),
@@ -78,7 +81,8 @@ export default async function ProductPage({
   const { image1, image2 } = getImages(product);
   const notes = getNotesFromMetadata(product);
   const volume = getMetadata(product, "volume") || "100ml";
-  const concentration = getMetadata(product, "concentration") || "Eau de Parfum";
+  const concentration =
+    getMetadata(product, "concentration") || "Eau de Parfum";
   const defaultVariantId = product.variants?.[0]?.id || "";
 
   // Charger les produits de la même collection pour les suggestions
@@ -90,7 +94,9 @@ export default async function ProductPage({
         limit: 5,
       },
     });
-    relatedProducts = response.products.filter((p) => p.id !== product.id).slice(0, 4);
+    relatedProducts = response.products
+      .filter((p) => p.id !== product.id)
+      .slice(0, 4);
   }
 
   return (
@@ -110,7 +116,11 @@ export default async function ProductPage({
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           {/* Product Gallery */}
-          <ProductGallery image1={image1} image2={image2} name={product.title} />
+          <ProductGallery
+            image1={image1}
+            image2={image2}
+            name={product.title}
+          />
 
           {/* Product Info */}
           <div className="flex flex-col justify-center">
@@ -121,7 +131,7 @@ export default async function ProductPage({
               {product.title}
             </h1>
             <p className="text-2xl font-medium text-foreground mb-8">
-              {price.toFixed(2)} €
+              {price.toFixed(2)} XOF
             </p>
 
             {product.description && (
@@ -131,7 +141,9 @@ export default async function ProductPage({
             )}
 
             {/* Notes */}
-            {(notes.top.length > 0 || notes.heart.length > 0 || notes.base.length > 0) && (
+            {(notes.top.length > 0 ||
+              notes.heart.length > 0 ||
+              notes.base.length > 0) && (
               <div className="space-y-6 mb-10">
                 <h3 className="font-serif text-lg tracking-wide text-foreground">
                   Notes Olfactives
@@ -139,30 +151,42 @@ export default async function ProductPage({
                 <div className="grid grid-cols-3 gap-6">
                   {notes.top.length > 0 && (
                     <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Tête</p>
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        Tête
+                      </p>
                       <ul className="space-y-1">
                         {notes.top.map((note) => (
-                          <li key={note} className="text-sm text-foreground">{note}</li>
+                          <li key={note} className="text-sm text-foreground">
+                            {note}
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
                   {notes.heart.length > 0 && (
                     <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Coeur</p>
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        Coeur
+                      </p>
                       <ul className="space-y-1">
                         {notes.heart.map((note) => (
-                          <li key={note} className="text-sm text-foreground">{note}</li>
+                          <li key={note} className="text-sm text-foreground">
+                            {note}
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
                   {notes.base.length > 0 && (
                     <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Fond</p>
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        Fond
+                      </p>
                       <ul className="space-y-1">
                         {notes.base.map((note) => (
-                          <li key={note} className="text-sm text-foreground">{note}</li>
+                          <li key={note} className="text-sm text-foreground">
+                            {note}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -174,17 +198,24 @@ export default async function ProductPage({
             {/* Product Details */}
             <div className="flex gap-8 mb-10 pb-10 border-b border-border">
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Volume</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                  Volume
+                </p>
                 <p className="text-sm text-foreground">{volume}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Concentration</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                  Concentration
+                </p>
                 <p className="text-sm text-foreground">{concentration}</p>
               </div>
             </div>
 
             {/* Add to Cart & Wishlist */}
-            <ProductActions variantId={defaultVariantId} productId={product.id} />
+            <ProductActions
+              variantId={defaultVariantId}
+              productId={product.id}
+            />
           </div>
         </div>
       </section>
@@ -205,7 +236,9 @@ export default async function ProductPage({
                     price={getPrice(related)}
                     image1={rImages.image1}
                     image2={rImages.image2}
-                    category={related.subtitle || related.collection?.title || "Parfum"}
+                    category={
+                      related.subtitle || related.collection?.title || "Parfum"
+                    }
                   />
                 </Link>
               );

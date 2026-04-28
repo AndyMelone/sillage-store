@@ -1,9 +1,8 @@
 "use client";
 
+import type { HttpTypes } from "@medusajs/types";
 import {
-  BadgePercent,
   ChevronDown,
-  Eye,
   Filter,
   Grid3X3,
   Heart,
@@ -16,17 +15,11 @@ import {
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import type { HttpTypes } from "@medusajs/types";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,15 +35,27 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
 import { useCartStore } from "@/store/use-cart-store";
+import { useProductsStore } from "@/store/use-products-store";
+import { useWishlistStore } from "@/store/use-wishlist-store";
 
-// ─── Helpers ────────────────────────────────────────────
 function getPrice(product: HttpTypes.StoreProduct): number {
-  const variant = product.variants?.[0];
-  if (variant?.calculated_price?.calculated_amount) {
-    return variant.calculated_price.calculated_amount;
-  }
-  return 0;
+  const variant = product.variants?.sort((a, b) => {
+    if (
+      !a.calculated_price?.calculated_amount &&
+      !b.calculated_price?.calculated_amount
+    )
+      return 0;
+    if (!a.calculated_price?.calculated_amount) return 1;
+    if (!b.calculated_price?.calculated_amount) return -1;
+    return (
+      a.calculated_price.calculated_amount -
+      b.calculated_price.calculated_amount
+    );
+  })?.[0];
+
+  return variant?.calculated_price?.calculated_amount ?? 0;
 }
 
 function getImages(product: HttpTypes.StoreProduct) {
@@ -61,7 +66,6 @@ function getImages(product: HttpTypes.StoreProduct) {
   };
 }
 
-// ─── Sort Options ───────────────────────────────────────
 const sortOptions = [
   { value: "title", label: "Nom A-Z" },
   { value: "price-asc", label: "Prix croissant" },
@@ -70,72 +74,71 @@ const sortOptions = [
 ];
 
 export default function ParfumsPage() {
-  const [products, setProducts] = useState<HttpTypes.StoreProduct[]>([]);
-  const [collections, setCollections] = useState<HttpTypes.StoreCollection[]>([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 500]);
-  const [sortBy, setSortBy] = useState("title");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [quickViewProduct, setQuickViewProduct] = useState<HttpTypes.StoreProduct | null>(null);
+  const {
+    products,
+    collections,
+    isLoading,
+    selectedCollections,
+    priceRange,
+    sortBy,
+    viewMode,
+    quickViewProduct,
+    fetchProducts,
+    fetchCollections,
+    setSortBy,
+    setViewMode,
+
+    setPriceRange,
+    toggleCollection,
+    setSelectedCollections,
+    clearFilters,
+  } = useProductsStore();
+
   const addItem = useCartStore((state) => state.addItem);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const searchParams = useSearchParams();
+  const { toggleItem, isInWishlist } = useWishlistStore();
+  const [mounted, setMounted] = useState(false);
 
-  // ─── Charger produits et collections depuis l'API ─────
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
-        const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
-
-        // Fetch regions first to get region_id
-        const regionsRes = await fetch(`${backendUrl}/store/regions`, {
-          headers: { "x-publishable-api-key": publishableKey },
-        });
-        const regionsData = await regionsRes.json();
-        const regionId = regionsData.regions?.[0]?.id;
-
-        // Fetch products
-        const productsRes = await fetch(
-          `${backendUrl}/store/products?limit=100&fields=*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags${regionId ? `&region_id=${regionId}` : ""}`,
-          { headers: { "x-publishable-api-key": publishableKey } }
-        );
-        const productsData = await productsRes.json();
-        setProducts(productsData.products || []);
-
-        // Fetch collections
-        const collectionsRes = await fetch(`${backendUrl}/store/collections?limit=100`, {
-          headers: { "x-publishable-api-key": publishableKey },
-        });
-        const collectionsData = await collectionsRes.json();
-        setCollections(collectionsData.collections || []);
-      } catch (error) {
-        console.error("Error loading products:", error);
-      } finally {
-        setIsLoadingProducts(false);
-      }
-    }
-    fetchData();
+    setMounted(true);
   }, []);
 
-  // ─── Filtrage & tri côté client ───────────────────────
+  useEffect(() => {
+    fetchProducts();
+    fetchCollections();
+  }, [fetchProducts, fetchCollections]);
+
+  useEffect(() => {
+    const collectionHandle = searchParams.get("collection");
+    if (collectionHandle && collections.length > 0) {
+      const matchedCollection = collections.find(
+        (c) => c.handle === collectionHandle,
+      );
+      if (
+        matchedCollection &&
+        !selectedCollections.includes(matchedCollection.id)
+      ) {
+        setSelectedCollections([matchedCollection.id]);
+      }
+    }
+  }, [searchParams, collections, selectedCollections, setSelectedCollections]);
+
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
-    // Filter by collection
     if (selectedCollections.length > 0) {
-      filtered = filtered.filter(
-        (p) => p.collection_id && selectedCollections.includes(p.collection_id)
-      );
+      filtered = filtered.filter((p) => {
+        const colId = p.collection_id || p.collection?.id;
+        return colId && selectedCollections.includes(colId);
+      });
     }
 
-    // Filter by price
     filtered = filtered.filter((p) => {
       const price = getPrice(p);
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
-    // Sort
     if (sortBy === "price-asc") {
       filtered.sort((a, b) => getPrice(a) - getPrice(b));
     } else if (sortBy === "price-desc") {
@@ -145,7 +148,8 @@ export default function ParfumsPage() {
     } else if (sortBy === "created_at") {
       filtered.sort(
         (a, b) =>
-          new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+          new Date(b.created_at ?? 0).getTime() -
+          new Date(a.created_at ?? 0).getTime(),
       );
     }
 
@@ -154,41 +158,33 @@ export default function ParfumsPage() {
 
   const activeFiltersCount =
     selectedCollections.length +
-    (priceRange[0] > 0 || priceRange[1] < 500 ? 1 : 0);
-
-  const clearFilters = () => {
-    setSelectedCollections([]);
-    setPriceRange([0, 500]);
-  };
-
-  const toggleCollection = (id: string) => {
-    setSelectedCollections((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
+    (priceRange[0] > 0 || priceRange[1] < 300000 ? 1 : 0);
 
   const FilterSidebar = () => (
     <div className="space-y-8">
-      {/* Collections */}
       {collections.length > 0 && (
         <div>
           <h3 className="font-serif text-lg mb-4">Collections</h3>
           <div className="space-y-3">
             {collections.map((col) => (
-              <label
+              <div
                 key={col.id}
-                className="flex items-center justify-between cursor-pointer group"
+                className="flex items-center justify-between group"
               >
                 <div className="flex items-center gap-3">
                   <Checkbox
+                    id={`collection-${col.id}`}
                     checked={selectedCollections.includes(col.id)}
                     onCheckedChange={() => toggleCollection(col.id)}
                   />
-                  <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                  <label
+                    htmlFor={`collection-${col.id}`}
+                    className="text-sm text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer"
+                  >
                     {col.title}
-                  </span>
+                  </label>
                 </div>
-              </label>
+              </div>
             ))}
           </div>
         </div>
@@ -201,16 +197,16 @@ export default function ParfumsPage() {
           <Slider
             value={priceRange}
             onValueChange={(val) => {
-              if (Array.isArray(val)) setPriceRange([...val]);
+              if (Array.isArray(val)) setPriceRange([val[0], val[1]]);
             }}
-            max={500}
+            max={300000}
             min={0}
-            step={10}
+            step={5000}
             className="mb-4"
           />
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{priceRange[0]}€</span>
-            <span>{priceRange[1]}€</span>
+            <span>{priceRange[0]}XOF</span>
+            <span>{priceRange[1]}XOF</span>
           </div>
         </div>
       </div>
@@ -303,7 +299,7 @@ export default function ParfumsPage() {
                 {/* Product Count */}
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">
-                    {isLoadingProducts ? "..." : filteredProducts.length}
+                    {isLoading ? "..." : filteredProducts.length}
                   </span>{" "}
                   parfum{filteredProducts.length > 1 ? "s" : ""}
                 </p>
@@ -362,19 +358,19 @@ export default function ParfumsPage() {
                       <button
                         key={colId}
                         onClick={() => toggleCollection(colId)}
-                        className="flex items-center gap-1 px-3 py-1 bg-secondary text-sm rounded-full hover:bg-secondary/80 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1 bg-secondary text-sm rounded-full transition-colors"
                       >
                         {col?.title || colId}
                         <X className="h-3 w-3" />
                       </button>
                     );
                   })}
-                  {(priceRange[0] > 0 || priceRange[1] < 500) && (
+                  {(priceRange[0] > 0 || priceRange[1] < 300000) && (
                     <button
-                      onClick={() => setPriceRange([0, 500])}
-                      className="flex items-center gap-1 px-3 py-1 bg-secondary text-sm rounded-full hover:bg-secondary/80 transition-colors"
+                      onClick={() => setPriceRange([0, 300000])}
+                      className="flex items-center gap-1 px-3 py-1 bg-secondary text-sm rounded-full  transition-colors"
                     >
-                      {priceRange[0]}€ - {priceRange[1]}€
+                      {priceRange[0]}XOF - {priceRange[1]}XOF
                       <X className="h-3 w-3" />
                     </button>
                   )}
@@ -387,10 +383,12 @@ export default function ParfumsPage() {
                 </div>
               )}
 
-              {/* Loading */}
-              {isLoadingProducts ? (
+              {/* Loading & Products Grid */}
+              {isLoading ? (
                 <div className="text-center py-20">
-                  <p className="text-muted-foreground">Chargement des parfums...</p>
+                  <p className="text-muted-foreground">
+                    Chargement des parfums...
+                  </p>
                 </div>
               ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-20">
@@ -408,10 +406,15 @@ export default function ParfumsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredProducts.map((product, index) => {
                     const { image1, image2 } = getImages(product);
+
                     const price = getPrice(product);
                     const isNew = product.created_at
                       ? new Date(product.created_at).getTime() >
                         Date.now() - 30 * 24 * 60 * 60 * 1000
+                      : false;
+
+                    const isWishlisted = mounted
+                      ? isInWishlist(product.id)
                       : false;
 
                     return (
@@ -438,19 +441,14 @@ export default function ParfumsPage() {
                             size="icon"
                             variant="secondary"
                             className="h-8 w-8"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setQuickViewProduct(product);
-                            }}
+                            onClick={() => toggleItem(product.id)}
                           >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="secondary"
-                            className="h-8 w-8"
-                          >
-                            <Heart className="h-4 w-4" />
+                            <Heart
+                              className={cn(
+                                "h-4 w-4",
+                                isWishlisted && "fill-current",
+                              )}
+                            />
                           </Button>
                         </div>
 
@@ -503,7 +501,7 @@ export default function ParfumsPage() {
                                 "Parfum"}
                             </p>
                             <Link href={`/produit/${product.handle}`}>
-                              <h3 className="font-serif text-xl text-foreground group-hover:text-accent transition-colors">
+                              <h3 className="font-serif text-xl text-foreground  transition-colors">
                                 {product.title}
                               </h3>
                             </Link>
@@ -515,23 +513,14 @@ export default function ParfumsPage() {
                           </div>
                           <div className="flex flex-col items-end justify-between">
                             <span className="font-serif text-xl text-foreground">
-                              {price.toFixed(2)} €
+                              {price.toFixed(2)} XOF
                             </span>
                             <div className="flex gap-2">
                               <Button
                                 size="icon"
-                                variant="outline"
-                                className="h-8 w-8"
-                                onClick={() => setQuickViewProduct(product)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
                                 className="h-8 w-8"
                                 onClick={() => {
-                                  const variantId =
-                                    product.variants?.[0]?.id;
+                                  const variantId = product.variants?.[0]?.id;
                                   if (variantId) addItem(variantId, 1);
                                 }}
                               >
@@ -549,78 +538,6 @@ export default function ParfumsPage() {
           </div>
         </div>
       </section>
-
-      {/* Quick View Modal */}
-      <Dialog
-        open={!!quickViewProduct}
-        onOpenChange={() => setQuickViewProduct(null)}
-      >
-        <DialogContent className="max-w-3xl">
-          {quickViewProduct && (() => {
-            const { image1 } = getImages(quickViewProduct);
-            const price = getPrice(quickViewProduct);
-
-            return (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="font-serif text-2xl">
-                    {quickViewProduct.title}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="grid md:grid-cols-2 gap-6 mt-4">
-                  <div className="relative aspect-square overflow-hidden bg-secondary">
-                    <Image
-                      src={image1}
-                      alt={quickViewProduct.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                      {quickViewProduct.subtitle ||
-                        quickViewProduct.collection?.title ||
-                        "Parfum"}
-                    </p>
-                    <span className="font-serif text-2xl text-foreground mb-4">
-                      {price.toFixed(2)} €
-                    </span>
-                    {quickViewProduct.description && (
-                      <p className="text-muted-foreground text-sm mb-6 line-clamp-3">
-                        {quickViewProduct.description}
-                      </p>
-                    )}
-
-                    <div className="flex gap-3 mt-auto">
-                      <Button
-                        className="flex-1 gap-2"
-                        onClick={() => {
-                          const variantId =
-                            quickViewProduct.variants?.[0]?.id;
-                          if (variantId) addItem(variantId, 1);
-                          setQuickViewProduct(null);
-                        }}
-                      >
-                        <ShoppingBag className="h-4 w-4" />
-                        Ajouter au panier
-                      </Button>
-                      <Button variant="outline" size="icon">
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Link
-                      href={`/produit/${quickViewProduct.handle}`}
-                      className="text-center text-sm text-muted-foreground hover:text-foreground mt-4 underline"
-                    >
-                      Voir tous les détails
-                    </Link>
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }

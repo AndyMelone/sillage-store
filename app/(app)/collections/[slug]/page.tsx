@@ -1,12 +1,12 @@
 "use client";
 
+import type { HttpTypes } from "@medusajs/types";
 import { ArrowLeft, ArrowRight, Heart, ShoppingBag } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { use, useEffect, useState } from "react";
-import type { HttpTypes } from "@medusajs/types";
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -35,21 +35,29 @@ export default function CollectionDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
-  const [collection, setCollection] = useState<HttpTypes.StoreCollection | null>(null);
+  const [collection, setCollection] =
+    useState<HttpTypes.StoreCollection | null>(null);
   const [products, setProducts] = useState<HttpTypes.StoreProduct[]>([]);
-  const [allCollections, setAllCollections] = useState<HttpTypes.StoreCollection[]>([]);
+  const [allCollections, setAllCollections] = useState<
+    HttpTypes.StoreCollection[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
-        const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+        const backendUrl =
+          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+        const publishableKey =
+          process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
         const headers = { "x-publishable-api-key": publishableKey };
 
         // Fetch all collections
-        const colRes = await fetch(`${backendUrl}/store/collections?limit=100`, { headers });
+        const colRes = await fetch(
+          `${backendUrl}/store/collections?limit=100`,
+          { headers },
+        );
         const colData = await colRes.json();
         const cols: HttpTypes.StoreCollection[] = colData.collections || [];
         setAllCollections(cols);
@@ -70,7 +78,7 @@ export default function CollectionDetailPage({
         // Fetch products for this collection
         const prodRes = await fetch(
           `${backendUrl}/store/products?collection_id[]=${current.id}&limit=50&region_id=${regionId}&fields=*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags`,
-          { headers }
+          { headers },
         );
         const prodData = await prodRes.json();
         setProducts(prodData.products || []);
@@ -96,9 +104,9 @@ export default function CollectionDetailPage({
   }
 
   const heroImage =
-    (collection.metadata?.heroImage as string) ||
-    (collection.metadata?.image as string) ||
-    "/images/collection-placeholder.jpg";
+    (products.at(0)?.thumbnail as string) ||
+    (collection.metadata?.image as any) ||
+    "/placeholders/sillage.png";
   const longDescription =
     (collection.metadata?.longDescription as string) ||
     (collection.metadata?.description as string) ||
@@ -208,8 +216,8 @@ export default function CollectionDetailPage({
                     Notes Signature
                   </h2>
                   <p className="text-muted-foreground mb-6">
-                    Les matières premières qui définissent l{"'"}identité de cette
-                    collection :
+                    Les matières premières qui définissent l{"'"}identité de
+                    cette collection :
                   </p>
                   <div className="flex flex-wrap gap-3">
                     {notes.map((note, index) => (
@@ -243,7 +251,7 @@ export default function CollectionDetailPage({
                     {characteristics.map(
                       (
                         char: { icon: string; label: string; value: string },
-                        index: number
+                        index: number,
                       ) => (
                         <motion.div
                           key={char.label}
@@ -253,13 +261,17 @@ export default function CollectionDetailPage({
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                           className="p-5 bg-background border border-border"
                         >
-                          <span className="text-3xl mb-3 block">{char.icon}</span>
+                          <span className="text-3xl mb-3 block">
+                            {char.icon}
+                          </span>
                           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
                             {char.label}
                           </p>
-                          <p className="font-medium text-foreground">{char.value}</p>
+                          <p className="font-medium text-foreground">
+                            {char.value}
+                          </p>
                         </motion.div>
-                      )
+                      ),
                     )}
                   </div>
                 </motion.div>
@@ -402,7 +414,8 @@ export default function CollectionDetailPage({
                             {otherCollection.title}
                           </h3>
                           {(() => {
-                            const desc = otherCollection.metadata?.description as string | undefined;
+                            const desc = otherCollection.metadata
+                              ?.description as string | undefined;
                             return desc ? (
                               <p className="text-sm text-white/70">{desc}</p>
                             ) : null;

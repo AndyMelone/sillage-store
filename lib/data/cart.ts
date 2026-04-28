@@ -3,6 +3,7 @@
 import { sdk } from "@/lib/config";
 import { HttpTypes } from "@medusajs/types";
 import { cookies } from "next/headers";
+import { listRegions } from "./regions";
 
 const CART_ID_COOKIE = "_medusa_cart_id";
 
@@ -37,15 +38,13 @@ export async function retrieveCart(cartId?: string) {
     .fetch<{ cart: HttpTypes.StoreCart }>(`/store/carts/${id}`, {
       method: "GET",
       query: {
-        fields: "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions",
+        fields: "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, *shipping_address, *billing_address, *shipping_methods",
       },
-      cache: "no-store", // Ensure we always get the freshest cart
+      cache: "no-store",
     })
     .then(({ cart }) => cart)
     .catch(() => null);
 }
-
-import { listRegions } from "./regions";
 
 export async function getOrSetCart() {
   let cart = await retrieveCart(undefined);
@@ -66,6 +65,18 @@ export async function getOrSetCart() {
   return cart;
 }
 
+export async function updateCart(data: HttpTypes.StoreUpdateCart) {
+  const cartId = await getCartId();
+  if (!cartId) return null;
+
+  return await sdk.store.cart.update(cartId, data)
+    .then(({ cart }) => cart)
+    .catch((err) => {
+      console.error("Update cart error:", err);
+      return null;
+    });
+}
+
 export async function addToCart({
   variantId,
   quantity,
@@ -73,15 +84,8 @@ export async function addToCart({
   variantId: string;
   quantity: number;
 }) {
-  if (!variantId) {
-    throw new Error("Missing variant ID when adding to cart");
-  }
-
   const cart = await getOrSetCart();
-
-  if (!cart) {
-    throw new Error("Error retrieving or creating cart");
-  }
+  if (!cart) throw new Error("Error retrieving or creating cart");
 
   await sdk.store.cart.createLineItem(cart.id, {
     variant_id: variantId,
@@ -97,20 +101,73 @@ export async function updateLineItem({
   quantity: number;
 }) {
   const cartId = await getCartId();
-
-  if (!cartId) {
-    throw new Error("Missing cart ID when updating line item");
-  }
+  if (!cartId) throw new Error("Missing cart ID");
 
   await sdk.store.cart.updateLineItem(cartId, lineId, { quantity });
 }
 
 export async function deleteLineItem(lineId: string) {
   const cartId = await getCartId();
-
-  if (!cartId) {
-    throw new Error("Missing cart ID when deleting line item");
-  }
+  if (!cartId) throw new Error("Missing cart ID");
 
   await sdk.store.cart.deleteLineItem(cartId, lineId);
+}
+
+// ─── Checkout Actions ──────────────────────────────────
+
+export async function listShippingOptions() {
+  const cartId = await getCartId();
+  if (!cartId) return [];
+
+  return await sdk.client.fetch<{ shipping_options: HttpTypes.StoreShippingOption[] }>(`/store/shipping-options`, {
+    method: "GET",
+    query: {
+      cart_id: cartId
+    }
+  })
+    .then(({ shipping_options }) => shipping_options)
+    .catch(() => []);
+}
+
+export async function addShippingMethod(optionId: string) {
+  const cartId = await getCartId();
+  if (!cartId) return null;
+
+  return await sdk.store.cart.addShippingMethod(cartId, { option_id: optionId })
+    .then(({ cart }) => cart)
+    .catch(() => null);
+}
+
+export async function initiatePayment() {
+  const cartId = await getCartId();
+  if (!cartId) return null;
+
+  // In Medusa V2, we create a payment collection for the cart
+  return await sdk.client.fetch<{ cart: HttpTypes.StoreCart }>(`/store/carts/${cartId}/payment-collections`, {
+    method: "POST",
+    body: {}
+  })
+  .then(({ cart }) => cart)
+  .catch((err) => {
+    console.error("Initiate payment error:", err);
+    return null;
+  });
+}
+
+export async function completeCart() {
+  const cartId = await getCartId();
+  if (!cartId) return null;
+
+  return await sdk.store.cart.complete(cartId)
+    .then((res) => {
+      if (res.type === "order") {
+        removeCartId();
+        return res.order;
+      }
+      return null;
+    })
+    .catch((err) => {
+      console.error("Complete cart error:", err);
+      return null;
+    });
 }

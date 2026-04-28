@@ -1,14 +1,22 @@
 "use client";
 
 import {
-  Boxes,
-  LayoutDashboard,
+  ChevronRight,
+  Citrus,
+  Droplets,
+  Flame,
+  Flower2,
+  Gem,
+  Heart,
+  Loader2,
   Menu,
   Search,
   ShoppingCart,
-  Sparkles,
+  Star,
+  TreePine,
+  User,
+  Wind,
 } from "lucide-react";
-import * as React from "react";
 
 import {
   Accordion,
@@ -17,14 +25,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import {
   Sheet,
   SheetContent,
@@ -36,18 +36,31 @@ import { cn } from "@/lib/utils";
 
 import {
   CommandDialog,
-  CommandEmpty,
-  CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { listCollections } from "@/lib/data/collections";
+import { searchProducts } from "@/lib/data/products";
+import { useAuthStore } from "@/store/use-auth-store";
 import { useCartStore } from "@/store/use-cart-store";
 import { useWishlistStore } from "@/store/use-wishlist-store";
-import { Heart } from "lucide-react";
+import { HttpTypes } from "@medusajs/types";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+// Palette of icons to assign to collections dynamically
+const COLLECTION_ICONS = [
+  Gem,
+  Flower2,
+  TreePine,
+  Citrus,
+  Flame,
+  Droplets,
+  Wind,
+  Star,
+];
 
 interface MenuItem {
   title: string;
@@ -65,400 +78,586 @@ interface NavbarProps {
     title: string;
   };
   menu?: MenuItem[];
-  mobileExtraLinks?: {
-    name: string;
-    url: string;
-  }[];
-  auth?: {
-    login: {
-      text: string;
-      url: string;
-    };
-    signup: {
-      text: string;
-      url: string;
-    };
-  };
 }
 
 export default function Navbar({
   logo = {
-    url: "https://sillage.com",
+    url: "/",
     src: "/logo/sillage.webp",
     alt: "Sillage logo",
     title: "Sillage",
   },
+}: NavbarProps) {
+  const [openSearch, setOpenSearch] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
-  menu = [
+  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { openCart, items } = useCartStore();
+  const { itemIds: wishlistItems } = useWishlistStore();
+  const [collections, setCollections] = useState<HttpTypes.StoreCollection[]>(
+    [],
+  );
+
+  useEffect(() => {
+    setMounted(true);
+    checkAuth();
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [checkAuth]);
+
+  useEffect(() => {
+    listCollections()
+      .then(({ collections: cols }) => {
+        setCollections(cols);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Build dynamic menu with real collection
+  const menu: MenuItem[] = [
     { title: "Parfums", url: "/parfums" },
     {
       title: "Collections",
       url: "/collections",
-      items: [
-        {
-          title: "Boisé",
+      items: collections.map((col, idx) => {
+        const IconComp = COLLECTION_ICONS[idx % COLLECTION_ICONS.length];
+        return {
+          title: col.title,
           description:
-            "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.",
-          icon: <Boxes className="size-5 shrink-0" />,
-          url: "/collections/boise",
-        },
-        {
-          title: "Fruité",
-          description:
-            "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.",
-          icon: <LayoutDashboard className="size-5 shrink-0" />,
-          url: "/collections/fruite",
-        },
-        {
-          title: "Florale",
-          description:
-            "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.",
-          icon: <Sparkles className="size-5 shrink-0" />,
-          url: "/collections/florale",
-        },
-      ],
+            (col.metadata?.description as string) ||
+            `Découvrez notre collection ${col.title}`,
+          icon: <IconComp className="size-5" />,
+          url: `/parfums?collection=${col.handle}`,
+        };
+      }),
     },
-    {
-      title: "Notre histoire",
-      url: "/notre-histoire",
-    },
-  ],
+    { title: "Notre histoire", url: "/notre-histoire" },
+  ];
 
-  auth = {
-    login: { text: "Sign in", url: "#" },
-    signup: { text: "Get Started", url: "#" },
-  },
-}: NavbarProps) {
-  const [openSearch, setOpenSearch] = React.useState(false);
-  const pathname = usePathname();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const currentPath = mounted ? pathname : "";
-
-  const { openCart, items } = useCartStore();
-  const { itemIds: wishlistItems } = useWishlistStore();
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
+  if (!mounted) return null;
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-background/60 backdrop-blur-md border-b border-border/40">
-      <div className="mx-auto px-4 sm:px-8 md:px-16 lg:px-24 py-4">
-        {/* Desktop Navbar */}
-        <nav className="hidden items-center justify-between lg:flex gap-4">
+    <header
+      className={cn(
+        "fixed top-0 left-0 w-full z-50 transition-all duration-700 ease-in-out px-4 sm:px-8 lg:px-12",
+        isScrolled ? "pt-2" : "pt-8",
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto max-w-7xl rounded-full transition-all duration-700 border border-transparent",
+          isScrolled
+            ? "bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl shadow-zinc-200/20"
+            : "bg-transparent backdrop-blur-none",
+        )}
+      >
+        <div
+          className={cn(
+            "transition-all duration-700 flex items-center justify-between",
+            isScrolled ? "px-6 py-2" : "px-4 py-0",
+          )}
+        >
+          {/* Logo */}
           <div className="flex-1 flex justify-start">
-            <Link href={logo.url} className="flex items-center gap-2">
-              <Image
-                width={100}
-                height={100}
-                src={logo.src}
-                className="w-16 rounded-full"
-                alt={logo.alt}
-              />
+            <Link href={logo.url} className="group flex items-center gap-3">
+              <div
+                className={cn(
+                  "relative overflow-hidden rounded-full border border-zinc-100 shadow-sm transition-all duration-700",
+                  isScrolled ? "w-10 h-10" : "w-14 h-14",
+                )}
+              >
+                <Image
+                  fill
+                  src={logo.src}
+                  className="object-cover"
+                  alt={logo.alt}
+                />
+              </div>
+              <span
+                className={cn(
+                  "font-serif tracking-[0.35em] hidden sm:block transition-all duration-700 font-light",
+                  isScrolled ? "text-xl" : "text-2xl",
+                )}
+              >
+                SILLAGE
+              </span>
             </Link>
           </div>
 
-          <div className="flex items-center justify-center">
-            <NavigationMenu className="**:data-radix-navigation-menu-viewport:rounded-3xl z-20">
-              <NavigationMenuList className="">
-                {menu.map((item) => renderMenuItem(item, currentPath))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
+          {/* Desktop Menu */}
+          <nav className="hidden lg:block">
+            <ul className="flex items-center gap-2">
+              {menu.map((item) => (
+                <li key={item.title}>
+                  {item.items ? (
+                    <MenuWithSubItems
+                      item={item}
+                      pathname={pathname}
+                      isScrolled={isScrolled}
+                    />
+                  ) : (
+                    <Link
+                      href={item.url}
+                      className={cn(
+                        "px-5 py-2 text-xs uppercase tracking-widest font-semibold transition-all duration-300 rounded-full hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50",
+                        pathname === item.url
+                          ? "text-zinc-900 dark:text-white"
+                          : "text-zinc-500",
+                      )}
+                    >
+                      {item.title}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-          <div className="flex-1 flex items-center justify-end gap-2">
-            {/* Search Button */}
+          {/* Actions */}
+          <div className="flex-1 flex items-center justify-end gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
+              className="rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
               onClick={() => setOpenSearch(true)}
             >
               <Search className="size-4" />
             </Button>
 
-            {/* Wishlist Button */}
-            <Button variant="ghost" size="icon" className="relative" asChild>
-              <Link href="/wishlist">
-                <Heart className="size-4" />
+            <Link href="/wishlist">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                <Heart
+                  className={cn(
+                    "size-4",
+                    wishlistItems.length > 0 && "fill-zinc-900 dark:fill-white",
+                  )}
+                />
                 {wishlistItems.length > 0 && (
-                  <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
+                  <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-zinc-900 text-[9px] font-bold text-white dark:bg-white dark:text-zinc-900">
                     {wishlistItems.length}
                   </span>
                 )}
-                <span className="sr-only">Liste de souhaits</span>
-              </Link>
-            </Button>
+              </Button>
+            </Link>
 
-            {/* Cart Button */}
             <Button
               variant="ghost"
               size="icon"
-              className="relative"
+              className="relative rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
               onClick={openCart}
             >
               <ShoppingCart className="size-4" />
-              {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                  {totalItems > 99 ? "99+" : totalItems}
+              {items.length > 0 && (
+                <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-zinc-900 text-[9px] font-bold text-white dark:bg-white dark:text-zinc-900">
+                  {items.length > 99 ? "99+" : items.length}
                 </span>
               )}
-              <span className="sr-only">
-                Panier ({totalItems} {totalItems === 1 ? "article" : "articles"}
-                )
-              </span>
             </Button>
 
-            {/* Auth Buttons */}
-            <Button variant="outline" size="sm" asChild>
-              <a href={auth.login.url}>{auth.login.text}</a>
-            </Button>
-          </div>
-        </nav>
+            <div className="hidden sm:block h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-2" />
 
-        {/* Mobile Navbar */}
-        <div className="block lg:hidden">
-          <div className="flex items-center justify-between">
-            <a href={logo.url} className="flex items-center gap-2">
-              <img
-                src={logo.src}
-                className="w-14 rounded-full"
-                alt={logo.alt}
-              />
-            </a>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpenSearch(true)}
-              >
-                <Search className="size-4" />
-              </Button>
+            {isAuthenticated ? (
+              <Link href="/compte">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full gap-2 hidden md:flex font-bold text-[10px] uppercase tracking-widest"
+                >
+                  <User className="size-4" />
+                  Espace
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full md:hidden"
+                >
+                  <User className="size-4" />
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/auth">
+                <Button
+                  size="sm"
+                  className="rounded-full px-6 hidden md:flex font-bold text-[10px] uppercase tracking-widest bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                >
+                  Connexion
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full md:hidden"
+                >
+                  <User className="size-4" />
+                </Button>
+              </Link>
+            )}
 
-              {/* Wishlist button mobile */}
-              <Button variant="ghost" size="icon" className="relative" asChild>
-                <Link href="/wishlist">
-                  <Heart className="size-4" />
-                  {wishlistItems.length > 0 && (
-                    <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                      {wishlistItems.length}
-                    </span>
-                  )}
-                  <span className="sr-only">Liste de souhaits</span>
-                </Link>
-              </Button>
-
-              {/* Cart button mobile */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-                onClick={openCart}
-              >
-                <ShoppingCart className="size-4" />
-                {totalItems > 0 && (
-                  <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-foreground text-xs font-medium text-background">
-                    {totalItems > 99 ? "99+" : totalItems}
-                  </span>
-                )}
-                <span className="sr-only">
-                  Panier ({totalItems}{" "}
-                  {totalItems === 1 ? "article" : "articles"})
-                </span>
-              </Button>
-
-              {/* Menu Sheet */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="size-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>
-                      <a href={logo.url} className="flex items-center gap-2">
-                        <img
-                          src={logo.src}
-                          className="w-16 rounded-full"
-                          alt={logo.alt}
-                        />
-                      </a>
-                    </SheetTitle>
-                  </SheetHeader>
-                  <div className="my-6 flex flex-col gap-6">
-                    <div className="flex flex-col gap-4">
-                      {menu.map((item) =>
-                        renderMobileMenuItem(item, currentPath),
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      <Button variant="outline" asChild>
-                        <a href={auth.login.url}>{auth.login.text}</a>
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+            {/* Mobile Menu Trigger */}
+            <MobileMenu
+              menu={menu}
+              logo={logo}
+              isAuthenticated={isAuthenticated}
+            />
           </div>
         </div>
       </div>
 
-      <CommandDialog open={openSearch} onOpenChange={setOpenSearch}>
-        <CommandInput placeholder="Search products, blogs, resources..." />
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup className="text-gray-500" heading="Suggestions">
-            <CommandItem className="text-gray-800 dark:text-gray-200">
-              Senteur
-            </CommandItem>
-            <CommandItem className="text-gray-800 dark:text-gray-200">
-              Boisé
-            </CommandItem>
-            <CommandItem className="text-gray-800 dark:text-gray-200">
-              Fruité
-            </CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
+      {/* Search Dialog */}
+      <SearchDialog open={openSearch} setOpen={setOpenSearch} />
     </header>
   );
 }
 
-const renderMenuItem = (item: MenuItem, pathname: string) => {
-  const isActive =
-    pathname === item.url || item.items?.some((sub) => pathname === sub.url);
-
-  if (item.items) {
-    return (
-      <NavigationMenuItem key={item.title} className="text-muted-foreground">
-        <NavigationMenuTrigger
-          className={cn(
-            "rounded-3xl transition-all duration-300",
-            isActive &&
-              "text-foreground after:content-[''] after:absolute after:bottom-1 after:left-4 after:right-8 after:h-0.5 after:bg-primary",
-          )}
-        >
-          {item.title}
-        </NavigationMenuTrigger>
-        <NavigationMenuContent className="rounded-3xl!">
-          <ul className="w-80 p-3">
-            {item.items.map((subItem) => {
-              const isSubActive = pathname === subItem.url;
-              return (
-                <li key={subItem.title}>
-                  <NavigationMenuLink asChild className="rounded-3xl!">
-                    <a
-                      className={cn(
-                        "flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-muted hover:text-accent-foreground",
-                        isSubActive && "bg-muted text-accent-foreground",
-                      )}
-                      href={subItem.url}
-                    >
-                      {subItem.icon}
-                      <div>
-                        <div className="text-sm font-semibold">
-                          {subItem.title}
-                        </div>
-                        {subItem.description && (
-                          <p className="text-sm leading-snug text-muted-foreground">
-                            {subItem.description}
-                          </p>
-                        )}
-                      </div>
-                    </a>
-                  </NavigationMenuLink>
-                </li>
-              );
-            })}
-          </ul>
-        </NavigationMenuContent>
-      </NavigationMenuItem>
-    );
-  }
+function MenuWithSubItems({
+  item,
+  pathname,
+  isScrolled,
+}: {
+  item: MenuItem;
+  pathname: string;
+  isScrolled: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const isActive = item.items?.some(
+    (sub) => pathname === sub.url || pathname.includes(sub.url),
+  );
+  const itemCount = item.items?.length || 0;
+  const useGrid = itemCount > 3;
 
   return (
-    <NavigationMenuItem key={item.title}>
-      <NavigationMenuLink asChild>
-        <a
-          className={cn(
-            "group relative inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-accent-foreground",
-            isActive &&
-              "text-foreground after:content-[''] after:absolute after:bottom-1 after:left-4 after:right-4 after:h-0.5 after:bg-primary",
-          )}
-          href={item.url}
-        >
-          {item.title}
-        </a>
-      </NavigationMenuLink>
-    </NavigationMenuItem>
-  );
-};
-
-const renderMobileMenuItem = (item: MenuItem, pathname: string) => {
-  const isActive =
-    pathname === item.url || item.items?.some((sub) => pathname === sub.url);
-
-  if (item.items) {
-    return (
-      <Accordion
-        key={item.title}
-        type="single"
-        collapsible
-        className="flex w-full flex-col"
+    <div
+      className="relative group"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        className={cn(
+          "px-5 py-2 text-xs uppercase tracking-widest font-semibold transition-all duration-300 rounded-full flex items-center gap-1.5",
+          isOpen || isActive
+            ? "text-zinc-900 dark:text-white"
+            : "text-zinc-500",
+        )}
       >
-        <AccordionItem value={item.title} className="border-b-0">
-          <AccordionTrigger
+        <Link href={item.url}>{item.title}</Link>
+        <ChevronRight
+          className={cn(
+            "size-3 transition-transform duration-300",
+            isOpen ? "rotate-90" : "",
+          )}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          className={cn(
+            "absolute top-full pt-4 animate-in fade-in slide-in-from-top-2 duration-300",
+            useGrid ? "left-1/2 -translate-x-1/2" : "left-1/2 -translate-x-1/2",
+          )}
+        >
+          <div
             className={cn(
-              "py-0 font-semibold hover:no-underline transition-colors",
-              isActive ? "text-primary" : "",
+              "bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl rounded-3xl p-4",
+              useGrid ? "w-[520px]" : "w-80",
             )}
           >
-            {item.title}
-          </AccordionTrigger>
-          <AccordionContent className="mt-2">
-            {item.items.map((subItem) => {
-              const isSubActive = pathname === subItem.url;
-              return (
+            {/* Grid or List of collections */}
+            <div
+              className={cn(
+                "max-h-[400px] overflow-y-auto custom-scrollbar",
+                useGrid ? "grid grid-cols-2 gap-2" : "space-y-1",
+              )}
+            >
+              {item.items?.map((sub) => (
                 <Link
-                  key={subItem.title}
+                  key={sub.title}
+                  href={sub.url}
                   className={cn(
-                    "flex select-none gap-4 rounded-md p-3 leading-none outline-none transition-colors hover:bg-muted hover:text-accent-foreground",
-                    isSubActive && "bg-muted text-primary",
+                    "flex items-start gap-3 p-3 rounded-2xl transition-all duration-200",
+                    pathname === sub.url
+                      ? "bg-zinc-100 dark:bg-zinc-900"
+                      : "hover:bg-zinc-50 dark:hover:bg-zinc-900",
                   )}
-                  href={subItem.url}
                 >
-                  {subItem.icon}
-                  <div>
-                    <div className="text-sm font-semibold">{subItem.title}</div>
-                    {subItem.description && (
-                      <p className="text-sm leading-snug text-muted-foreground">
-                        {subItem.description}
-                      </p>
-                    )}
+                  <div className="mt-0.5 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-900 dark:text-white shadow-sm shrink-0">
+                    {sub.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">
+                      {sub.title}
+                    </p>
+                    <p className="text-[10px] text-zinc-500 leading-relaxed mt-0.5 line-clamp-2">
+                      {sub.description}
+                    </p>
                   </div>
                 </Link>
-              );
-            })}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    );
-  }
+              ))}
+            </div>
+
+            {/* View All Link */}
+            <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <Link
+                href="/parfums"
+                className="flex items-center justify-center gap-2 py-2 text-[10px] uppercase tracking-widest font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              >
+                Voir toutes les collections
+                <ChevronRight className="size-3" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileMenu({
+  menu,
+  logo,
+  isAuthenticated,
+}: {
+  menu: MenuItem[];
+  logo: any;
+  isAuthenticated: boolean;
+}) {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full lg:hidden">
+          <Menu className="size-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-xs border-none p-0 flex flex-col"
+      >
+        <SheetHeader className="p-8 border-b text-left">
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border">
+                <Image
+                  src={logo.src}
+                  alt="logo"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="font-serif text-2xl tracking-[0.2em]">
+                SILLAGE
+              </span>
+            </Link>
+          </div>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto p-8">
+          <nav className="space-y-8">
+            {menu.map((item) => (
+              <div key={item.title}>
+                {item.items ? (
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value={item.title} className="border-none">
+                      <AccordionTrigger className="py-2 text-xl font-serif hover:no-underline tracking-wide">
+                        {item.title}
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-4 space-y-3">
+                        {item.items.map((sub) => (
+                          <Link
+                            key={sub.title}
+                            href={sub.url}
+                            className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 transition-colors"
+                          >
+                            <div className="p-2.5 bg-white dark:bg-zinc-800 rounded-xl shadow-sm">
+                              {sub.icon}
+                            </div>
+                            <span className="font-bold text-sm">
+                              {sub.title}
+                            </span>
+                          </Link>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                ) : (
+                  <Link
+                    href={item.url}
+                    className="block text-xl font-serif py-2 border-none tracking-wide"
+                  >
+                    {item.title}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
+        </div>
+        <div className="p-8 border-t mt-auto bg-zinc-50 dark:bg-zinc-900/50">
+          {isAuthenticated ? (
+            <Button
+              asChild
+              className="w-full rounded-full h-14 font-bold text-xs uppercase tracking-widest"
+              variant="outline"
+            >
+              <Link href="/compte">Mon Espace</Link>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              className="w-full rounded-full h-14 font-bold text-xs uppercase tracking-widest"
+            >
+              <Link href="/auth">Connexion</Link>
+            </Button>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function SearchDialog({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<HttpTypes.StoreProduct[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setQuery("");
+      setResults([]);
+      return;
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (query.length < 2) {
+      setResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const products = await searchProducts(query, 6);
+        setResults(products);
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const handleSelect = (handle: string) => {
+    setOpen(false);
+    setQuery("");
+    setResults([]);
+    router.push(`/produit/${handle}`);
+  };
 
   return (
-    <a
-      key={item.title}
-      href={item.url}
-      className={cn(
-        "font-semibold transition-colors",
-        isActive ? "text-primary" : "",
-      )}
-    >
-      {item.title}
-    </a>
+    <CommandDialog open={open} onOpenChange={setOpen}>
+      <div className="relative">
+        <CommandInput
+          placeholder="Rechercher une fragrance..."
+          className="h-14 border-none text-base"
+          value={query}
+          onValueChange={setQuery}
+        />
+        {isSearching && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <Loader2 className="size-4 animate-spin text-zinc-400" />
+          </div>
+        )}
+      </div>
+      <CommandList className="p-2 max-h-[60vh]">
+        {query.length >= 2 && results.length === 0 && !isSearching && (
+          <div className="py-8 text-center text-sm text-zinc-500">
+            Aucun parfum trouvé pour &quot;{query}&quot;.
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <div className="space-y-1">
+            <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              {results.length} résultat{results.length > 1 ? "s" : ""}
+            </p>
+            {results.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => handleSelect(product.handle!)}
+                className="w-full rounded-xl p-3 flex items-center gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors text-left"
+              >
+                <div className="relative size-12 rounded-lg overflow-hidden border bg-zinc-50 shrink-0">
+                  <Image
+                    src={product.thumbnail || "/placeholder.webp"}
+                    alt={product.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm truncate">{product.title}</p>
+                  <p className="text-xs text-zinc-500">
+                    {product.collection?.title || "Parfum"}
+                  </p>
+                </div>
+                <div className="text-sm font-bold shrink-0">
+                  {product.variants?.[0]?.calculated_price?.calculated_amount
+                    ? (
+                        product.variants[0].calculated_price.calculated_amount /
+                        100
+                      ).toLocaleString("fr-FR", {
+                        style: "currency",
+                        currency: "EUR",
+                      })
+                    : "—"}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {query.length < 2 && !isSearching && (
+          <div className="space-y-1">
+            <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              Suggestions
+            </p>
+            <button
+              onClick={() => setQuery("Boisé")}
+              className="w-full rounded-xl p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors text-left text-sm"
+            >
+              Parfums Boisés
+            </button>
+            <button
+              onClick={() => setQuery("Fruité")}
+              className="w-full rounded-xl p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors text-left text-sm"
+            >
+              Senteurs Fruitées
+            </button>
+            <button
+              onClick={() => setQuery("Floral")}
+              className="w-full rounded-xl p-3 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors text-left text-sm"
+            >
+              Notes Florales
+            </button>
+          </div>
+        )}
+      </CommandList>
+    </CommandDialog>
   );
-};
+}

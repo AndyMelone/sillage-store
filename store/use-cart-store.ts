@@ -1,7 +1,13 @@
+import { HttpTypes } from "@medusajs/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { addToCart, deleteLineItem, getOrSetCart, retrieveCart, updateLineItem } from "../lib/data/cart";
-import { HttpTypes } from "@medusajs/types";
+import {
+  addToCart,
+  deleteLineItem,
+  getOrSetCart,
+  retrieveCart,
+  updateLineItem,
+} from "../lib/data/cart";
 
 export interface CartItem {
   id: string; // Medusa LineItemId
@@ -52,7 +58,7 @@ export const useCartStore = create<CartState>()(
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
-      
+
       initCart: async () => {
         set({ isLoading: true });
         try {
@@ -114,13 +120,15 @@ export const useCartStore = create<CartState>()(
         return get().items.reduce((sum, item) => sum + item.quantity, 0);
       },
       get totalPrice() {
-        return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        return get().items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
       },
     }),
     {
       name: "sillage-cart-storage",
       partialize: (state) => ({ items: state.items }), // Only persist items initially to avoid hydration issues before sync
-    }
-  )
+    },
+  ),
 );
-

@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default async function CollectionsPage() {
-  const { collections } = await listCollections();
-
+  const collectionsWithProducts = await listCollections();
+  const { collections } = collectionsWithProducts;
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -23,8 +23,8 @@ export default async function CollectionsPage() {
             Nos Collections
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Chaque collection raconte une histoire unique, un voyage sensoriel
-            à travers les plus belles matières premières de la parfumerie.
+            Chaque collection raconte une histoire unique, un voyage sensoriel à
+            travers les plus belles matières premières de la parfumerie.
           </p>
         </div>
       </section>
@@ -35,13 +35,16 @@ export default async function CollectionsPage() {
           <div className="grid gap-16 lg:gap-24">
             {await Promise.all(
               collections.map(async (collection, index) => {
-                const products = await listProductsByCollectionId(collection.id, 100);
+                const products = await listProductsByCollectionId(
+                  collection.id,
+                  100,
+                );
                 const productsCount = products.length;
                 const isReversed = index % 2 === 1;
                 const heroImage =
-                  (collection.metadata?.heroImage as string) ||
-                  (collection.metadata?.image as string) ||
-                  "/images/collection-placeholder.jpg";
+                  (products[0]?.thumbnail as string) ||
+                  (collection?.metadata?.image as string) ||
+                  "/placeholders/sillage.png";
                 const longDescription =
                   (collection.metadata?.longDescription as string) ||
                   (collection.metadata?.description as string) ||
@@ -89,7 +92,9 @@ export default async function CollectionsPage() {
                     </Link>
 
                     {/* Content */}
-                    <div className={`${isReversed ? "lg:order-1 lg:text-right" : ""}`}>
+                    <div
+                      className={`${isReversed ? "lg:order-1 lg:text-right" : ""}`}
+                    >
                       <p className="text-xs uppercase tracking-[0.3em] text-accent mb-3">
                         {productsCount} parfum{productsCount > 1 ? "s" : ""}
                       </p>
@@ -154,7 +159,7 @@ export default async function CollectionsPage() {
                                     {char.value}
                                   </p>
                                 </div>
-                              )
+                              ),
                             )}
                         </div>
                       )}
@@ -177,7 +182,7 @@ export default async function CollectionsPage() {
                     </div>
                   </div>
                 );
-              })
+              }),
             )}
           </div>
         </div>
@@ -190,8 +195,8 @@ export default async function CollectionsPage() {
             Besoin d{"'"}aide pour choisir ?
           </h2>
           <p className="text-primary-foreground/70 mb-8 max-w-xl mx-auto">
-            Notre guide olfactif vous accompagne pour trouver le parfum qui
-            vous correspond parfaitement.
+            Notre guide olfactif vous accompagne pour trouver le parfum qui vous
+            correspond parfaitement.
           </p>
           <Link
             href="/parfums"

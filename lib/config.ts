@@ -17,11 +17,9 @@ const originalFetch = sdk.client.fetch.bind(sdk.client);
 
 sdk.client.fetch = async <T>(
   input: FetchInput,
-  init?: FetchArgs
+  init?: FetchArgs,
 ): Promise<T> => {
   const headers = init?.headers ?? {};
-  
-  // Custom headers can be added here if needed (e.g. auth, locale)
 
   const newHeaders = {
     ...headers,

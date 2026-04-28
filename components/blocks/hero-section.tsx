@@ -60,7 +60,7 @@ export function HeroSection() {
             size="lg"
             className="bg-white text-black hover:bg-white/90 uppercase tracking-wider text-sm px-8"
           >
-            <Link href="/collection">
+            <Link href="/collections">
               Voir Collection
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
