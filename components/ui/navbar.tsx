@@ -291,7 +291,7 @@ export default function Navbar({
             {/* Mobile Menu Trigger */}
             <MobileMenu
               menu={menu}
-              logo={logo}
+              logo={logo!}
               isAuthenticated={isAuthenticated}
             />
           </div>
@@ -410,7 +410,7 @@ function MobileMenu({
   isAuthenticated,
 }: {
   menu: MenuItem[];
-  logo: NavbarProps["logo"];
+  logo: NonNullable<NavbarProps["logo"]>;
   isAuthenticated: boolean;
 }) {
   return (

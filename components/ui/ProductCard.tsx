@@ -12,6 +12,7 @@ interface ProductCardProps {
   image1?: string | null;
   image2?: string | null;
   category?: string;
+  variantId?: string;
 }
 
 export function ProductCard({
