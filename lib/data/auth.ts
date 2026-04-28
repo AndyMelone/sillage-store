@@ -1,7 +1,4 @@
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
-  "https://sillage-back-production.up.railway.app/";
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+import { sdk } from "@/lib/config";
 
 // ─── Types ──────────────────────────────────────────────
 export type AuthMethod = "sms" | "whatsapp";
@@ -18,22 +15,10 @@ async function postToBackend<T>(
   path: string,
   body: Record<string, unknown>,
 ): Promise<T> {
-  const res = await fetch(`${BACKEND_URL}${path}`, {
+  return sdk.client.fetch<T>(path, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-publishable-api-key": PUBLISHABLE_KEY,
-    },
-    body: JSON.stringify(body),
+    body,
   });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.error || "Une erreur est survenue.");
-  }
-
-  return data as T;
 }
 
 // ─── Étape 1 : Vérifier si le téléphone existe ─────────

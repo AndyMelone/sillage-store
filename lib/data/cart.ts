@@ -1,9 +1,8 @@
 "use server";
 
-import { sdk } from "@/lib/config";
+import { DEFAULT_REGION_ID, sdk } from "@/lib/config";
 import { HttpTypes } from "@medusajs/types";
 import { cookies } from "next/headers";
-import { listRegions } from "./regions";
 
 const CART_ID_COOKIE = "_medusa_cart_id";
 
@@ -51,15 +50,8 @@ export async function getOrSetCart() {
   let cart = await retrieveCart(undefined);
 
   if (!cart) {
-    const regions = await listRegions();
-    const defaultRegionId = regions[0]?.id;
-
-    if (!defaultRegionId) {
-      throw new Error("No default region found in Medusa.");
-    }
-
     const cartResp = await sdk.store.cart.create({
-      region_id: defaultRegionId,
+      region_id: DEFAULT_REGION_ID,
     });
     cart = cartResp.cart;
     await setCartId(cart.id);

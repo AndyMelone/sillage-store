@@ -10,6 +10,8 @@ import { use, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { listCollections } from "@/lib/data/collections";
+import { listProductsByCollectionId } from "@/lib/data/products";
 import { useCartStore } from "@/store/use-cart-store";
 
 // ─── Helpers ────────────────────────────────────────────
@@ -47,23 +49,9 @@ export default function CollectionDetailPage({
   useEffect(() => {
     async function fetchData() {
       try {
-        const backendUrl =
-          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
-          "https://sillage-back-production.up.railway.app/";
-        const publishableKey =
-          process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
-        const headers = { "x-publishable-api-key": publishableKey };
-
-        // Fetch all collections
-        const colRes = await fetch(
-          `${backendUrl}/store/collections?limit=100`,
-          { headers },
-        );
-        const colData = await colRes.json();
-        const cols: HttpTypes.StoreCollection[] = colData.collections || [];
+        const { collections: cols } = await listCollections({ limit: 100 });
         setAllCollections(cols);
 
-        // Find current collection by handle
         const current = cols.find((c) => c.handle === slug);
         if (!current) {
           setIsLoading(false);
@@ -71,18 +59,8 @@ export default function CollectionDetailPage({
         }
         setCollection(current);
 
-        // Fetch region for pricing
-        const regRes = await fetch(`${backendUrl}/store/regions`, { headers });
-        const regData = await regRes.json();
-        const regionId = regData.regions?.[0]?.id || "";
-
-        // Fetch products for this collection
-        const prodRes = await fetch(
-          `${backendUrl}/store/products?collection_id[]=${current.id}&limit=50&region_id=${regionId}&fields=*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags`,
-          { headers },
-        );
-        const prodData = await prodRes.json();
-        setProducts(prodData.products || []);
+        const prods = await listProductsByCollectionId(current.id, 50);
+        setProducts(prods);
       } catch (error) {
         console.error("Error loading collection:", error);
       } finally {

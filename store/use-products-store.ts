@@ -1,4 +1,4 @@
-import { sdk } from "@/lib/config";
+import { DEFAULT_REGION_ID, sdk } from "@/lib/config";
 import { HttpTypes } from "@medusajs/types";
 import { create } from "zustand";
 
@@ -43,27 +43,18 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   fetchProducts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { regions } = await sdk.store.region.list();
-      const region = regions?.[0];
-      const regionId = region?.id;
-      const currencyCode = region?.currency_code || "XOF";
-
-      const decimalDigits = 0;
-
-      const fields =
-        "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,*collection";
-
       const { products } = await sdk.store.product.list({
         limit: 100,
-        fields,
-        ...(regionId ? { region_id: regionId } : {}),
+        region_id: DEFAULT_REGION_ID,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,*collection",
       });
 
       set({
         products: products || [],
         isLoading: false,
-        currencyCode,
-        decimalDigits,
+        currencyCode: "XOF",
+        decimalDigits: 0,
       });
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
