@@ -32,13 +32,16 @@ COPY --from=builder /app/public ./public
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN mkdir -p .next
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# If the Next build produced a `standalone` output, use it. Otherwise
+# copy the full `.next` and `node_modules` so `next start` works.
+RUN mkdir -p .next || true
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Start the Next standalone server
-CMD ["node", "server.js"]
+# Start the Next server using the project `start` script (next start)
+CMD ["npm", "run", "start"]
