@@ -1,7 +1,9 @@
 import Medusa, { FetchArgs, FetchInput } from "@medusajs/js-sdk";
 
-// Defaults to standard port for Medusa server
-let MEDUSA_BACKEND_URL = "http://localhost:9000";
+const DEFAULT_MEDUSA_BACKEND_URL =
+  "https://sillage-back-production.up.railway.app/";
+
+let MEDUSA_BACKEND_URL = DEFAULT_MEDUSA_BACKEND_URL;
 
 if (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) {
   MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL;

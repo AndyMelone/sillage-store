@@ -48,7 +48,8 @@ export default function CollectionDetailPage({
     async function fetchData() {
       try {
         const backendUrl =
-          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+          process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
+          "https://sillage-back-production.up.railway.app/";
         const publishableKey =
           process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
         const headers = { "x-publishable-api-key": publishableKey };
@@ -135,7 +136,7 @@ export default function CollectionDetailPage({
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] overflow-hidden">
+      <section className="relative h-[70vh] min-h-125 overflow-hidden">
         <Image
           src={heroImage}
           alt={collection.title}

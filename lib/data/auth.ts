@@ -1,5 +1,6 @@
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
+  "https://sillage-back-production.up.railway.app/";
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
 // ─── Types ──────────────────────────────────────────────
