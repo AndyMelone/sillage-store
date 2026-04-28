@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { listCollections } from "@/lib/data/collections";
 import { listProductsByCollectionId } from "@/lib/data/products";
 import { ArrowRight, Sparkles } from "lucide-react";
