@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { getProductByHandle, listProducts } from "@/lib/data/products";
 import Link from "next/link";
 import { notFound } from "next/navigation";

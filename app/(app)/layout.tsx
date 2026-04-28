@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { CartDrawer } from "@/components/cart-drawer";
 import Navbar from "@/components/ui/navbar";
 import { StackedCircularFooter } from "@/components/ui/stacked-circular-footer";
