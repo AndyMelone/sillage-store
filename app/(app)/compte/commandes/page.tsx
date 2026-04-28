@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/use-auth-store";
 import { listOrders } from "@/lib/data/customer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,17 +14,32 @@ import { HttpTypes } from "@medusajs/types";
 import Image from "next/image";
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const { isAuthenticated, checkAuth } = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
   const [orders, setOrders] = useState<HttpTypes.StoreOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsMounted(true);
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (isMounted && !isAuthenticated) {
+      router.push("/auth");
+    }
+  }, [isMounted, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isMounted || !isAuthenticated) return;
     async function loadOrders() {
       const data = await listOrders();
       setOrders(data);
       setIsLoading(false);
     }
     loadOrders();
-  }, []);
+  }, [isMounted, isAuthenticated]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -33,7 +50,7 @@ export default function OrdersPage() {
     }
   };
 
-  if (isLoading) {
+  if (!isMounted || !isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="size-8" />

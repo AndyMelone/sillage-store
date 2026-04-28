@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/use-auth-store";
 import { getCustomer, addAddress, deleteAddress } from "@/lib/data/customer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,11 +14,14 @@ import { HttpTypes } from "@medusajs/types";
 import { Input } from "@/components/ui/input";
 
 export default function AdressesPage() {
+  const router = useRouter();
+  const { isAuthenticated, checkAuth } = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const [newAddress, setNewAddress] = useState<HttpTypes.StoreCustomerAddress>({
     first_name: "",
     last_name: "",
@@ -28,13 +33,25 @@ export default function AdressesPage() {
   } as any);
 
   useEffect(() => {
+    setIsMounted(true);
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (isMounted && !isAuthenticated) {
+      router.push("/auth");
+    }
+  }, [isMounted, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isMounted || !isAuthenticated) return;
     async function loadCustomer() {
       const data = await getCustomer();
       setCustomer(data);
       setIsLoading(false);
     }
     loadCustomer();
-  }, []);
+  }, [isMounted, isAuthenticated]);
 
   const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +82,7 @@ export default function AdressesPage() {
     }
   };
 
-  if (isLoading) {
+  if (!isMounted || !isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="size-8" />

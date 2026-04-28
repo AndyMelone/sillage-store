@@ -18,9 +18,12 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/store/use-auth-store";
 
 export default function ProfilPage() {
   const router = useRouter();
+  const { isAuthenticated, checkAuth } = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
   const [customer, setCustomer] = useState<HttpTypes.StoreCustomer | null>(
     null,
   );
@@ -35,6 +38,18 @@ export default function ProfilPage() {
   });
 
   useEffect(() => {
+    setIsMounted(true);
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (isMounted && !isAuthenticated) {
+      router.push("/auth");
+    }
+  }, [isMounted, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isMounted || !isAuthenticated) return;
     async function loadCustomer() {
       const data = await getCustomer();
       if (data) {
@@ -48,7 +63,7 @@ export default function ProfilPage() {
       setIsLoading(false);
     }
     loadCustomer();
-  }, []);
+  }, [isMounted, isAuthenticated]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +81,7 @@ export default function ProfilPage() {
     setIsSaving(false);
   };
 
-  if (isLoading) {
+  if (!isMounted || !isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="size-8" />

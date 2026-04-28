@@ -70,7 +70,7 @@ export async function addAddress(address: HttpTypes.StoreCustomerAddress) {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      body: { address },
+      body: address,
     });
     return customer;
   } catch (err) {
