@@ -145,13 +145,13 @@ export default function Navbar({
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 w-full z-50 transition-all duration-700 ease-in-out px-4 sm:px-8 lg:px-12",
+        "fixed top-0 left-0 z-50 w-full px-3 transition-all duration-700 ease-in-out sm:px-8 lg:px-12",
         isScrolled ? "pt-2" : "pt-8",
       )}
     >
       <div
         className={cn(
-          "mx-auto max-w-7xl rounded-full transition-all duration-700 border border-transparent",
+          "mx-auto max-w-7xl rounded-full border border-transparent transition-all duration-700",
           isScrolled
             ? "bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl shadow-zinc-200/20"
             : "bg-transparent backdrop-blur-none",
@@ -159,17 +159,17 @@ export default function Navbar({
       >
         <div
           className={cn(
-            "transition-all duration-700 flex items-center justify-between",
-            isScrolled ? "px-6 py-2" : "px-4 py-0",
+            "flex items-center justify-between transition-all duration-700",
+            isScrolled ? "px-4 py-2 sm:px-6" : "px-3 py-0 sm:px-4",
           )}
         >
           {/* Logo */}
-          <div className="flex-1 flex justify-start">
+          <div className="flex min-w-0 flex-1 justify-start">
             <Link href={logo.url} className="group flex items-center gap-3">
               <div
                 className={cn(
-                  "relative overflow-hidden rounded-full border border-zinc-100 shadow-sm transition-all duration-700",
-                  isScrolled ? "w-10 h-10" : "w-14 h-14",
+                  "relative h-10 w-10 overflow-hidden rounded-full border border-zinc-100 shadow-sm transition-all duration-700 sm:h-14 sm:w-14",
+                  isScrolled ? "sm:h-10 sm:w-10" : "",
                 )}
               >
                 <Image
@@ -181,7 +181,7 @@ export default function Navbar({
               </div>
               <span
                 className={cn(
-                  "font-serif tracking-[0.35em] hidden sm:block transition-all duration-700 font-light",
+                  "hidden font-serif font-light tracking-[0.35em] transition-all duration-700 sm:block",
                   isScrolled ? "text-xl" : "text-2xl",
                 )}
               >
@@ -220,11 +220,11 @@ export default function Navbar({
           </nav>
 
           {/* Actions */}
-          <div className="flex-1 flex items-center justify-end gap-1 sm:gap-2">
+          <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              className="hidden rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 sm:inline-flex"
               onClick={() => setOpenSearch(true)}
             >
               <Search className="size-4" />
@@ -264,40 +264,26 @@ export default function Navbar({
               )}
             </Button>
 
-            <div className="hidden sm:block h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-2" />
+            <div className="mx-1 hidden h-4 w-px bg-zinc-200 dark:bg-zinc-800 sm:block sm:mx-2" />
 
             {isAuthenticated ? (
               <Link href="/compte">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="rounded-full gap-2 hidden md:flex font-bold text-[10px] uppercase tracking-widest"
+                  className="hidden rounded-full gap-2 font-bold text-[10px] uppercase tracking-widest md:flex"
                 >
                   <User className="size-4" />
                   Espace
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full md:hidden"
-                >
-                  <User className="size-4" />
                 </Button>
               </Link>
             ) : (
               <Link href="/auth">
                 <Button
                   size="sm"
-                  className="rounded-full px-6 hidden md:flex font-bold text-[10px] uppercase tracking-widest bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+                  className="hidden rounded-full bg-zinc-900 px-6 font-bold text-[10px] uppercase tracking-widest text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 md:flex"
                 >
                   Connexion
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full md:hidden"
-                >
-                  <User className="size-4" />
                 </Button>
               </Link>
             )}
@@ -367,13 +353,13 @@ function MenuWithSubItems({
           <div
             className={cn(
               "bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl rounded-3xl p-4",
-              useGrid ? "w-[520px]" : "w-80",
+              useGrid ? "w-130" : "w-80",
             )}
           >
             {/* Grid or List of collections */}
             <div
               className={cn(
-                "max-h-[400px] overflow-y-auto custom-scrollbar",
+                "max-h-100 overflow-y-auto custom-scrollbar",
                 useGrid ? "grid grid-cols-2 gap-2" : "space-y-1",
               )}
             >
@@ -438,13 +424,13 @@ function MobileMenu({
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-xs border-none p-0 flex flex-col"
+        className="flex w-full flex-col border-none p-0 sm:max-w-xs"
       >
-        <SheetHeader className="p-8 border-b text-left">
+        <SheetHeader className="border-b p-6 text-left sm:p-8">
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
-              <div className="relative w-12 h-12 rounded-full overflow-hidden border">
+              <div className="relative h-12 w-12 overflow-hidden rounded-full border">
                 <Image
                   src={logo.src}
                   alt="logo"
@@ -458,14 +444,14 @@ function MobileMenu({
             </Link>
           </div>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8">
           <nav className="space-y-8">
             {menu.map((item) => (
               <div key={item.title}>
                 {item.items ? (
                   <Accordion type="single" collapsible>
                     <AccordionItem value={item.title} className="border-none">
-                      <AccordionTrigger className="py-2 text-xl font-serif hover:no-underline tracking-wide">
+                      <AccordionTrigger className="py-2 font-serif text-xl tracking-wide hover:no-underline">
                         {item.title}
                       </AccordionTrigger>
                       <AccordionContent className="pt-4 space-y-3">

@@ -8,7 +8,7 @@ import Link from "next/link";
 
 export function HeroSection() {
   return (
-    <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+    <section className="relative flex min-h-150 items-center justify-center overflow-hidden pt-24 lg:pt-28">
       <div className="absolute inset-0">
         <Image
           src="/images/heros.png"
@@ -20,12 +20,12 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
       </div>
 
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-xs uppercase tracking-[0.4em] text-white/70 mb-6"
+          className="mb-4 text-[10px] uppercase tracking-[0.35em] text-white/70 sm:mb-6 sm:text-xs"
         >
           La grande parfumerie à petit prix
         </motion.p>
@@ -34,7 +34,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="font-serif text-5xl md:text-6xl lg:text-7xl text-white tracking-wide leading-tight text-balance"
+          className="font-serif text-4xl leading-tight tracking-wide text-white text-balance sm:text-5xl md:text-6xl lg:text-7xl"
         >
           Découvrez Essence Parfums
         </motion.h1>
@@ -43,7 +43,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-6 text-lg text-white/80 max-w-2xl mx-auto text-balance"
+          className="mx-auto mt-4 max-w-2xl text-base text-white/80 text-balance sm:mt-6 sm:text-lg"
         >
           Des fragrances d{"'"}exception inspirées des plus grandes maisons de
           parfumerie, à des prix accessibles.
@@ -53,12 +53,12 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+          className="mt-8 flex flex-col gap-3 justify-center sm:mt-10 sm:flex-row sm:gap-4"
         >
           <Button
             asChild
             size="lg"
-            className="bg-white text-black hover:bg-white/90 uppercase tracking-wider text-sm px-8"
+            className="h-12 bg-white px-6 text-sm uppercase tracking-wider text-black hover:bg-white/90 sm:h-14 sm:px-8"
           >
             <Link href="/collections">
               Voir Collection
@@ -69,7 +69,7 @@ export function HeroSection() {
             asChild
             variant="outline"
             size="lg"
-            className="border-white/30 text-white bg-white/10 uppercase tracking-wider text-sm px-8"
+            className="h-12 border-white/30 bg-white/10 px-6 text-sm uppercase tracking-wider text-white sm:h-14 sm:px-8"
           >
             <Link href="#best-sellers">Meilleures Ventes</Link>
           </Button>

@@ -28,9 +28,9 @@ const valueProps = [
 
 export function ValuePropsSection() {
   return (
-    <section className="py-16 bg-primary text-primary-foreground">
+    <section className="bg-primary py-14 text-primary-foreground sm:py-16">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4">
           {valueProps.map((prop, index) => (
             <motion.div
               key={prop.title}
@@ -40,8 +40,8 @@ export function ValuePropsSection() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="text-center"
             >
-              <prop.icon className="h-8 w-8 mx-auto mb-4 opacity-80" />
-              <h3 className="font-medium text-sm uppercase tracking-wider mb-2">
+              <prop.icon className="mx-auto mb-4 h-8 w-8 opacity-80" />
+              <h3 className="mb-2 text-sm font-medium uppercase tracking-wider">
                 {prop.title}
               </h3>
               <p className="text-sm opacity-70">{prop.description}</p>

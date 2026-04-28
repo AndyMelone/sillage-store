@@ -29,24 +29,24 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section className="py-20 bg-background">
+    <section className="bg-background py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-14"
+          className="mb-12 text-center sm:mb-14"
         >
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
+          <p className="mb-3 text-xs uppercase tracking-[0.3em] text-muted-foreground">
             Témoignages
           </p>
-          <h2 className="font-serif text-4xl md:text-5xl text-foreground">
+          <h2 className="font-serif text-3xl text-foreground sm:text-4xl md:text-5xl">
             Laissons nos clients parler
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid gap-6 md:grid-cols-3 md:gap-8">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={testimonial.author}
@@ -54,9 +54,9 @@ export function TestimonialsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-card border border-border p-8 relative"
+              className="relative border border-border bg-card p-6 sm:p-8"
             >
-              <Quote className="h-8 w-8 text-muted-foreground/30 absolute top-6 right-6" />
+              <Quote className="absolute right-5 top-5 h-8 w-8 text-muted-foreground/30" />
 
               <div className="flex gap-1 mb-4">
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
@@ -68,7 +68,7 @@ export function TestimonialsSection() {
                 ))}
               </div>
 
-              <p className="text-foreground leading-relaxed mb-6 italic">
+              <p className="mb-6 italic leading-relaxed text-foreground">
                 {`"${testimonial.quote}"`}
               </p>
 

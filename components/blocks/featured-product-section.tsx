@@ -8,15 +8,15 @@ import Link from "next/link";
 
 export function FeaturedProductSection() {
   return (
-    <section className="py-20 bg-secondary">
+    <section className="bg-secondary py-16 sm:py-20">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative aspect-square lg:aspect-4/5"
+            className="relative aspect-square overflow-hidden rounded-3xl lg:aspect-4/5"
           >
             <Image
               src="/images/featured-perfume.jpg"
@@ -33,13 +33,13 @@ export function FeaturedProductSection() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="lg:py-8"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-4">
+            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-muted-foreground">
               Parfum Vedette
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-foreground mb-6">
+            <h2 className="mb-6 font-serif text-3xl text-foreground sm:text-4xl md:text-5xl">
               Oud Mystique
             </h2>
-            <p className="text-muted-foreground leading-relaxed mb-8 text-lg">
+            <p className="mb-8 text-base leading-relaxed text-muted-foreground sm:text-lg">
               Un voyage olfactif vers les contrées orientales les plus
               précieuses. Oud Mystique célèbre la noblesse du bois d{"'"}oud,
               sublimé par des épices rares et des résines précieuses. Une
@@ -47,35 +47,35 @@ export function FeaturedProductSection() {
               sillage puissant et raffiné.
             </p>
 
-            <div className="grid grid-cols-3 gap-6 mb-10">
+            <div className="mb-10 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6">
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                <p className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">
                   Notes de tête
                 </p>
                 <p className="text-sm text-foreground">Safran, Cannelle</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                <p className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">
                   Notes de coeur
                 </p>
                 <p className="text-sm text-foreground">Oud royal, Jasmin</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                <p className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">
                   Notes de fond
                 </p>
                 <p className="text-sm text-foreground">Ambre, Benjoin</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
               <span className="font-serif text-3xl text-foreground">
                 245,00 XOF
               </span>
               <Button
                 asChild
                 size="lg"
-                className="uppercase tracking-wider text-sm"
+                className="h-12 uppercase tracking-wider text-sm sm:h-14"
               >
                 <Link href="/produit/oud-mystique">
                   Découvrir

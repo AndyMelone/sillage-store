@@ -38,7 +38,8 @@ export async function retrieveCart(cartId?: string) {
     .fetch<{ cart: HttpTypes.StoreCart }>(`/store/carts/${id}`, {
       method: "GET",
       query: {
-        fields: "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, *shipping_address, *billing_address, *shipping_methods",
+        fields:
+          "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, *shipping_address, *billing_address, *shipping_methods",
       },
       cache: "no-store",
     })
@@ -52,12 +53,14 @@ export async function getOrSetCart() {
   if (!cart) {
     const regions = await listRegions();
     const defaultRegionId = regions[0]?.id;
-    
+
     if (!defaultRegionId) {
       throw new Error("No default region found in Medusa.");
     }
 
-    const cartResp = await sdk.store.cart.create({ region_id: defaultRegionId });
+    const cartResp = await sdk.store.cart.create({
+      region_id: defaultRegionId,
+    });
     cart = cartResp.cart;
     await setCartId(cart.id);
   }
@@ -69,7 +72,8 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
   const cartId = await getCartId();
   if (!cartId) return null;
 
-  return await sdk.store.cart.update(cartId, data)
+  return await sdk.store.cart
+    .update(cartId, data)
     .then(({ cart }) => cart)
     .catch((err) => {
       console.error("Update cart error:", err);
@@ -119,12 +123,16 @@ export async function listShippingOptions() {
   const cartId = await getCartId();
   if (!cartId) return [];
 
-  return await sdk.client.fetch<{ shipping_options: HttpTypes.StoreShippingOption[] }>(`/store/shipping-options`, {
-    method: "GET",
-    query: {
-      cart_id: cartId
-    }
-  })
+  return await sdk.client
+    .fetch<{ shipping_options: HttpTypes.StoreShippingOption[] }>(
+      `/store/shipping-options`,
+      {
+        method: "GET",
+        query: {
+          cart_id: cartId,
+        },
+      },
+    )
     .then(({ shipping_options }) => shipping_options)
     .catch(() => []);
 }
@@ -133,7 +141,8 @@ export async function addShippingMethod(optionId: string) {
   const cartId = await getCartId();
   if (!cartId) return null;
 
-  return await sdk.store.cart.addShippingMethod(cartId, { option_id: optionId })
+  return await sdk.store.cart
+    .addShippingMethod(cartId, { option_id: optionId })
     .then(({ cart }) => cart)
     .catch(() => null);
 }
@@ -143,22 +152,27 @@ export async function initiatePayment() {
   if (!cartId) return null;
 
   // In Medusa V2, we create a payment collection for the cart
-  return await sdk.client.fetch<{ cart: HttpTypes.StoreCart }>(`/store/carts/${cartId}/payment-collections`, {
-    method: "POST",
-    body: {}
-  })
-  .then(({ cart }) => cart)
-  .catch((err) => {
-    console.error("Initiate payment error:", err);
-    return null;
-  });
+  return await sdk.client
+    .fetch<{ cart: HttpTypes.StoreCart }>(
+      `/store/carts/${cartId}/payment-collections`,
+      {
+        method: "POST",
+        body: {},
+      },
+    )
+    .then(({ cart }) => cart)
+    .catch((err) => {
+      console.error("Initiate payment error:", err);
+      return null;
+    });
 }
 
 export async function completeCart() {
   const cartId = await getCartId();
   if (!cartId) return null;
 
-  return await sdk.store.cart.complete(cartId)
+  return await sdk.store.cart
+    .complete(cartId)
     .then((res) => {
       if (res.type === "order") {
         removeCartId();
