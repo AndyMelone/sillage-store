@@ -3,22 +3,29 @@ FROM node:20-bullseye-slim AS base
 FROM base AS deps
 WORKDIR /app
 
-# copy lockfile if present for deterministic installs
-COPY package*.json package-lock*.json ./
+COPY sillage-store/package.json ./
 
-# Install dependencies (prefer npm ci if lockfile exists)
-RUN if [ -f package-lock.json ]; then \
-			npm ci --no-audit --no-fund --silent; \
-		else \
-			npm install --no-audit --no-fund --silent; \
-		fi
+# Install dependencies directly from package.json for compatibility with Railway builds.
+RUN npm install --no-audit --no-fund --silent
 
 FROM base AS builder
 WORKDIR /app
 
 # re-use installed node_modules to leverage layer caching
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY sillage-store/package.json ./
+COPY sillage-store/next.config.ts ./
+COPY sillage-store/tsconfig.json ./
+COPY sillage-store/eslint.config.mjs ./
+COPY sillage-store/postcss.config.mjs ./
+COPY sillage-store/components.json ./
+COPY sillage-store/middleware.ts ./
+COPY sillage-store/next-env.d.ts ./
+COPY sillage-store/app ./app
+COPY sillage-store/components ./components
+COPY sillage-store/lib ./lib
+COPY sillage-store/public ./public
+COPY sillage-store/store ./store
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
