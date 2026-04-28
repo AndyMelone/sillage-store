@@ -10,7 +10,7 @@ import {
 } from "../lib/data/cart";
 
 export interface CartItem {
-  id: string; // Medusa LineItemId
+  id: string;
   variant_id: string;
   name: string;
   price: number;
@@ -35,7 +35,6 @@ interface CartState {
   totalPrice: number;
 }
 
-// Helper to map Medusa cart to local state
 const mapCartItems = (cart: HttpTypes.StoreCart | null): CartItem[] => {
   if (!cart?.items) return [];
   return cart.items.map((item) => ({
@@ -128,7 +127,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "sillage-cart-storage",
-      partialize: (state) => ({ items: state.items }), // Only persist items initially to avoid hydration issues before sync
+      partialize: (state) => ({ items: state.items }),
     },
   ),
 );

@@ -34,6 +34,6 @@ export const useWishlistStore = create<WishlistState>()(
     }),
     {
       name: "sillage-wishlist-storage",
-    }
-  )
+    },
+  ),
 );
