@@ -20,26 +20,34 @@ export const listCollections = async (
   queryParams.limit = queryParams.limit || 100;
   queryParams.offset = queryParams.offset || 0;
 
-  const { collections, count } = await sdk.store.collection.list({
-    limit: queryParams.limit as number,
-    offset: queryParams.offset as number,
-  });
+  try {
+    const { collections, count } = await sdk.store.collection.list({
+      limit: queryParams.limit as number,
+      offset: queryParams.offset as number,
+    });
 
-  const collectionsWithProducts = await Promise.all(
-    collections.map(async (collection) => {
-      const { products } = await sdk.store.product.list({
-        collection_id: collection.id,
-        limit: 20,
-        offset: 0,
-      });
-      return { ...collection, products };
-    }),
-  );
+    const collectionsWithProducts = await Promise.all(
+      collections.map(async (collection) => {
+        const { products } = await sdk.store.product.list({
+          collection_id: collection.id,
+          limit: 20,
+          offset: 0,
+        });
+        return { ...collection, products };
+      }),
+    );
 
-  return {
-    collections: collectionsWithProducts,
-    count: count || collections.length,
-  };
+    return {
+      collections: collectionsWithProducts,
+      count: count || collections.length,
+    };
+  } catch (error) {
+    console.error("List collections error:", error);
+    return {
+      collections: [],
+      count: 0,
+    };
+  }
 };
 
 export const getCollectionByHandle = async (
@@ -50,5 +58,9 @@ export const getCollectionByHandle = async (
       query: { handle, fields: "*products" },
       cache: "no-store",
     })
-    .then(({ collections }) => collections[0]);
+    .then(({ collections }) => collections[0])
+    .catch((error) => {
+      console.error("Get collection by handle error:", error);
+      return undefined as unknown as HttpTypes.StoreCollection;
+    });
 };

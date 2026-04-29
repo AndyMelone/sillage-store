@@ -60,6 +60,14 @@ export const listProducts = async ({
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null;
       return { response: { products, count }, nextPage, queryParams };
+    })
+    .catch((error) => {
+      console.error("List products error:", error);
+      return {
+        response: { products: [], count: 0 },
+        nextPage: null,
+        queryParams,
+      };
     });
 };
 
@@ -106,5 +114,9 @@ export const listProductsByIds = async (
       region_id: DEFAULT_REGION_ID,
       fields: PRODUCT_FIELDS_WITH_COLLECTION,
     })
-    .then(({ products }) => products);
+    .then(({ products }) => products)
+    .catch((error) => {
+      console.error("List products by ids error:", error);
+      return [];
+    });
 };
