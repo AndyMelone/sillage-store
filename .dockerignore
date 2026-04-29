@@ -3,5 +3,3 @@
 **/.git
 **/.vscode
 **/*.tsbuildinfo
-**/.env
-**/.env.*
