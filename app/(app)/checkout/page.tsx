@@ -35,13 +35,14 @@ import { useEffect, useState } from "react";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice, syncCart } = useCartStore();
+  const { cart, items, totalPrice, syncCart } = useCartStore();
   const { isAuthenticated } = useAuthStore();
 
   const [step, setStep] = useState<"info" | "shipping" | "payment" | "success">("info");
   const [isLoading, setIsLoading] = useState(false);
   const [order, setOrder] = useState<HttpTypes.StoreOrder | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
   const [shippingOptions, setShippingOptions] = useState<HttpTypes.StoreShippingOption[]>([]);
   const [selectedOptionId, setSelectedOptionId] = useState<string>("");
 
@@ -85,8 +86,9 @@ export default function CheckoutPage() {
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    const cart = await updateCart({
+    const updated = await updateCart({
       email: `${formData.phone}@sillage.sn`,
       shipping_address: {
         first_name: formData.first_name,
@@ -98,11 +100,17 @@ export default function CheckoutPage() {
       },
     });
 
-    if (cart) {
+    if (updated) {
       const options = await listShippingOptions();
-      setShippingOptions(options);
-      if (options.length > 0) setSelectedOptionId(options[0].id);
-      setStep("shipping");
+      if (options.length === 0) {
+        setError("Aucune option de livraison disponible. Veuillez réessayer.");
+      } else {
+        setShippingOptions(options);
+        setSelectedOptionId(options[0].id);
+        setStep("shipping");
+      }
+    } else {
+      setError("Impossible de mettre à jour vos informations. Veuillez réessayer.");
     }
 
     setIsLoading(false);
@@ -110,23 +118,32 @@ export default function CheckoutPage() {
 
   const handleShippingSubmit = async () => {
     setIsLoading(true);
-    const cart = await addShippingMethod(selectedOptionId);
-    if (cart) {
-      await initiatePayment();
-      setStep("payment");
+    setError(null);
+    const updated = await addShippingMethod(selectedOptionId);
+    if (updated) {
+      await syncCart();
+      const payment = await initiatePayment();
+      if (!payment) {
+        setError("Impossible d'initialiser le paiement. Veuillez réessayer.");
+      } else {
+        setStep("payment");
+      }
+    } else {
+      setError("Impossible d'ajouter la méthode de livraison. Veuillez réessayer.");
     }
     setIsLoading(false);
   };
 
   const handlePaymentSubmit = async () => {
     setIsLoading(true);
+    setError(null);
     const result = await completeCart();
     if (result) {
       setOrder(result);
       setStep("success");
       await syncCart();
     } else {
-      alert("Erreur lors de la finalisation de la commande.");
+      setError("Une erreur est survenue lors de la finalisation. Veuillez réessayer.");
     }
     setIsLoading(false);
   };
@@ -298,6 +315,11 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="pt-4">
+                      {error && (
+                        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3 mb-4">
+                          {error}
+                        </p>
+                      )}
                       <Button
                         type="submit"
                         disabled={isLoading}
@@ -499,6 +521,11 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
+                  {error && (
+                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
+                      {error}
+                    </p>
+                  )}
                   <Button
                     onClick={handleShippingSubmit}
                     disabled={isLoading || !selectedOptionId}
@@ -508,7 +535,7 @@ export default function CheckoutPage() {
                   </Button>
                   <Button
                     variant="ghost"
-                    onClick={() => setStep("info")}
+                    onClick={() => { setStep("info"); setError(null); }}
                     className="w-full rounded-full"
                   >
                     Retour aux infos
@@ -589,7 +616,12 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-4">
+                    {error && (
+                      <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
+                        {error}
+                      </p>
+                    )}
                     <Button
                       onClick={handlePaymentSubmit}
                       disabled={isLoading}
@@ -600,7 +632,7 @@ export default function CheckoutPage() {
                   </div>
                   <Button
                     variant="ghost"
-                    onClick={() => setStep("shipping")}
+                    onClick={() => { setStep("shipping"); setError(null); }}
                     className="w-full rounded-full"
                   >
                     Retour à la livraison
@@ -686,7 +718,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sous-total</span>
                       <span className="font-medium">
-                        {totalPrice.toLocaleString("fr-FR", {
+                        {(cart?.item_subtotal ?? totalPrice).toLocaleString("fr-FR", {
                           style: "currency",
                           currency: "XOF",
                         })}
@@ -695,14 +727,23 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Livraison</span>
                       <span className="text-zinc-900 font-medium">
-                        {"Calculé à l'étape suivante"}
+                        {step === "info"
+                          ? "Calculé à l'étape suivante"
+                          : cart?.shipping_total != null
+                            ? cart.shipping_total === 0
+                              ? "Gratuit"
+                              : cart.shipping_total.toLocaleString("fr-FR", {
+                                  style: "currency",
+                                  currency: "XOF",
+                                })
+                            : "—"}
                       </span>
                     </div>
                     <Separator className="my-4" />
                     <div className="flex justify-between text-2xl font-serif">
                       <span>Total</span>
                       <span className="font-bold">
-                        {totalPrice.toLocaleString("fr-FR", {
+                        {(cart?.total ?? totalPrice).toLocaleString("fr-FR", {
                           style: "currency",
                           currency: "XOF",
                         })}

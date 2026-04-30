@@ -38,7 +38,7 @@ export async function retrieveCart(cartId?: string) {
       method: "GET",
       query: {
         fields:
-          "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, *shipping_address, *billing_address, *shipping_methods",
+          "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, +item_subtotal, +shipping_total, +total, *promotions, *shipping_address, *billing_address, *shipping_methods, *payment_collection",
       },
       cache: "no-store",
     })
@@ -143,20 +143,26 @@ export async function initiatePayment() {
   const cartId = await getCartId();
   if (!cartId) return null;
 
-  // In Medusa V2, we create a payment collection for the cart
-  return await sdk.client
+  // Step 1: Create payment collection for the cart
+  const cart = await sdk.client
     .fetch<{ cart: HttpTypes.StoreCart }>(
       `/store/carts/${cartId}/payment-collections`,
-      {
-        method: "POST",
-        body: {},
-      },
+      { method: "POST", body: {} },
     )
     .then(({ cart }) => cart)
     .catch((err) => {
-      console.error("Initiate payment error:", err);
+      console.error("Create payment collection error:", err);
       return null;
     });
+
+  if (!cart?.payment_collection?.id) return null;
+
+  // Step 2: Create a payment session with the manual/COD provider
+  await sdk.store.payment
+    .initiatePaymentSession(cart, { provider_id: "pp_system_default" })
+    .catch((err) => console.error("Initiate payment session error:", err));
+
+  return cart;
 }
 
 export async function completeCart() {
