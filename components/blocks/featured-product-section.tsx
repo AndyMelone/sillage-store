@@ -9,7 +9,7 @@ import Link from "next/link";
 export function FeaturedProductSection() {
   return (
     <section className="bg-secondary py-16 sm:py-20">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
           <motion.div
             initial={{ opacity: 0, x: -50 }}

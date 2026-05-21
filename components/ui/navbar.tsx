@@ -47,7 +47,7 @@ import { useWishlistStore } from "@/store/use-wishlist-store";
 import { HttpTypes } from "@medusajs/types";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Palette of icons to assign to collections dynamically
@@ -91,6 +91,7 @@ export default function Navbar({
   const [openSearch, setOpenSearch] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
   const { checkAuth, isAuthenticated } = useAuthStore();
@@ -293,6 +294,8 @@ export default function Navbar({
               menu={menu}
               logo={logo!}
               isAuthenticated={isAuthenticated}
+              searchParams={searchParams}
+              onOpenSearch={() => setOpenSearch(true)}
             />
           </div>
         </div>
@@ -408,13 +411,22 @@ function MobileMenu({
   menu,
   logo,
   isAuthenticated,
+  searchParams,
+  onOpenSearch,
 }: {
   menu: MenuItem[];
   logo: NonNullable<NavbarProps["logo"]>;
   isAuthenticated: boolean;
+  searchParams: ReturnType<typeof useSearchParams>;
+  onOpenSearch: () => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  const pathname = usePathname();
+  const hasCollectionParam = !!searchParams.get("collection");
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full lg:hidden">
           <Menu className="size-5" />
@@ -427,7 +439,7 @@ function MobileMenu({
         <SheetHeader className="border-b p-6 text-left sm:p-8">
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" onClick={close} className="flex items-center gap-3">
               <div className="relative h-12 w-12 overflow-hidden rounded-full border">
                 <Image
                   src={logo.src}
@@ -440,46 +452,117 @@ function MobileMenu({
                 SILLAGE
               </span>
             </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              onClick={() => { close(); onOpenSearch(); }}
+            >
+              <Search className="size-5" />
+            </Button>
           </div>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto p-6 sm:p-8">
           <nav className="space-y-8">
-            {menu.map((item) => (
-              <div key={item.title}>
-                {item.items ? (
-                  <Accordion type="single" collapsible>
-                    <AccordionItem value={item.title} className="border-none">
-                      <AccordionTrigger className="py-2 font-serif text-xl tracking-wide hover:no-underline">
-                        {item.title}
-                      </AccordionTrigger>
-                      <AccordionContent className="pt-4 space-y-3">
-                        {item.items.map((sub) => (
-                          <Link
-                            key={sub.title}
-                            href={sub.url}
-                            className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 transition-colors"
-                          >
-                            <div className="p-2.5 bg-white dark:bg-zinc-800 rounded-xl shadow-sm">
-                              {sub.icon}
-                            </div>
-                            <span className="font-bold text-sm">
-                              {sub.title}
-                            </span>
-                          </Link>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                ) : (
-                  <Link
-                    href={item.url}
-                    className="block text-xl font-serif py-2 border-none tracking-wide"
-                  >
-                    {item.title}
-                  </Link>
-                )}
-              </div>
-            ))}
+            {menu.map((item) => {
+              const isAccordionActive = item.items
+                ? pathname.startsWith(item.url) ||
+                  (hasCollectionParam && pathname === "/parfums") ||
+                  item.items.some(
+                    (sub) =>
+                      pathname === sub.url ||
+                      pathname.startsWith(sub.url.split("?")[0]),
+                  )
+                : false;
+              const isDirectActive = !item.items && pathname === item.url;
+
+              return (
+                <div key={item.title}>
+                  {item.items ? (
+                    <Accordion type="single" collapsible>
+                      <AccordionItem value={item.title} className="border-none">
+                        <AccordionTrigger
+                          className={cn(
+                            "py-2 font-serif text-xl tracking-wide hover:no-underline",
+                            isAccordionActive
+                              ? "text-zinc-900 dark:text-white"
+                              : "text-zinc-600 dark:text-zinc-400",
+                          )}
+                        >
+                          {item.title}
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-4 space-y-3">
+                          {item.items.map((sub) => {
+                            const subHandle = new URLSearchParams(
+                              sub.url.split("?")[1] ?? "",
+                            ).get("collection");
+                            const isSubActive =
+                              pathname === sub.url ||
+                              (subHandle !== null &&
+                                searchParams.get("collection") === subHandle);
+                            return (
+                              <Link
+                                key={sub.title}
+                                href={sub.url}
+                                onClick={close}
+                                className={cn(
+                                  "flex items-center gap-4 p-4 rounded-2xl transition-colors",
+                                  isSubActive
+                                    ? "bg-zinc-900 dark:bg-white"
+                                    : "bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+                                )}
+                              >
+                                <div
+                                  className={cn(
+                                    "p-2.5 rounded-xl shadow-sm",
+                                    isSubActive
+                                      ? "bg-white/20 dark:bg-zinc-900/20"
+                                      : "bg-white dark:bg-zinc-800",
+                                  )}
+                                >
+                                  <span
+                                    className={
+                                      isSubActive
+                                        ? "text-white dark:text-zinc-900"
+                                        : ""
+                                    }
+                                  >
+                                    {sub.icon}
+                                  </span>
+                                </div>
+                                <span
+                                  className={cn(
+                                    "font-bold text-sm",
+                                    isSubActive
+                                      ? "text-white dark:text-zinc-900"
+                                      : "",
+                                  )}
+                                >
+                                  {sub.title}
+                                </span>
+                              </Link>
+                            );
+                          })}
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  ) : (
+                    <Link
+                      href={item.url}
+                      onClick={close}
+                      className={cn(
+                        "block text-xl font-serif py-2 border-none tracking-wide transition-colors",
+                        isDirectActive
+                          ? "text-zinc-900 dark:text-white font-semibold"
+                          : "text-zinc-600 dark:text-zinc-400",
+                      )}
+                    >
+                      {item.title}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
         <div className="p-8 border-t mt-auto bg-zinc-50 dark:bg-zinc-900/50">
@@ -489,14 +572,14 @@ function MobileMenu({
               className="w-full rounded-full h-14 font-bold text-xs uppercase tracking-widest"
               variant="outline"
             >
-              <Link href="/compte">Mon Espace</Link>
+              <Link href="/compte" onClick={close}>Mon Espace</Link>
             </Button>
           ) : (
             <Button
               asChild
               className="w-full rounded-full h-14 font-bold text-xs uppercase tracking-widest"
             >
-              <Link href="/auth">Connexion</Link>
+              <Link href="/auth" onClick={close}>Connexion</Link>
             </Button>
           )}
         </div>

@@ -44,7 +44,7 @@ export default function WishlistPage() {
 
   return (
     <main className="min-h-screen bg-background py-24">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
@@ -55,7 +55,7 @@ export default function WishlistPage() {
               <ArrowLeft className="size-4" />
               Retour à la boutique
             </Link>
-            <h1 className="font-serif text-5xl tracking-wide text-foreground">
+            <h1 className="font-serif text-3xl sm:text-5xl tracking-wide text-foreground">
               Ma Liste de Souhaits
             </h1>
           </div>
@@ -67,7 +67,7 @@ export default function WishlistPage() {
 
         <AnimatePresence mode="popLayout">
           {products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-8 sm:gap-y-12">
               {products.map((product) => (
                 <motion.div
                   key={product.id}

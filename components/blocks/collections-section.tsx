@@ -4,12 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 export async function CollectionsSection() {
-  const { collections } = await listCollections();
+  const result = await listCollections().catch(() => ({ collections: [], count: 0 }));
+  const { collections } = result;
   if (collections.length === 0) return null;
 
   return (
     <section className="py-20 bg-secondary">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-14">
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
             Explorez par famille olfactive
@@ -19,7 +20,7 @@ export async function CollectionsSection() {
           </h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {collections.slice(0, 8).map((collection) => {
             const imageUrl =
               (collection.products?.at(1)?.thumbnail as string) ||
@@ -51,7 +52,7 @@ export async function CollectionsSection() {
                       <p className="text-sm text-white/70 mb-3">{desc}</p>
                     ) : null;
                   })()}
-                  <span className="inline-flex items-center text-xs uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="inline-flex items-center text-xs uppercase tracking-wider opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
                     Explorer
                     <ArrowRight className="ml-2 h-3 w-3" />
                   </span>

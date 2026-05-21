@@ -400,12 +400,12 @@ function ConnexionForm() {
                 <div className="space-y-6">
                   <div className="flex justify-center">
                     <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                      <InputOTPGroup className="gap-2">
+                      <InputOTPGroup className="gap-1 sm:gap-2">
                         {[0, 1, 2, 3, 4, 5].map((i) => (
                           <InputOTPSlot
                             key={i}
                             index={i}
-                            className="w-12 h-14 text-xl border-zinc-200 rounded-lg"
+                            className="w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl border-zinc-200 rounded-lg"
                           />
                         ))}
                       </InputOTPGroup>

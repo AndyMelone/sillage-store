@@ -102,7 +102,7 @@ export default async function ProductPage({
   return (
     <main className="min-h-screen bg-background">
       {/* Back Link */}
-      <div className="max-w-7xl mx-auto px-6 pt-24 md:pt-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 md:pt-28">
         <Link
           href="/parfums"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -113,7 +113,7 @@ export default async function ProductPage({
       </div>
 
       {/* Product Details */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           {/* Product Gallery */}
           <ProductGallery
@@ -148,7 +148,7 @@ export default async function ProductPage({
                 <h3 className="font-serif text-lg tracking-wide text-foreground">
                   Notes Olfactives
                 </h3>
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-3 gap-4 sm:gap-6">
                   {notes.top.length > 0 && (
                     <div>
                       <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
@@ -226,7 +226,7 @@ export default async function ProductPage({
           <h2 className="font-serif text-3xl tracking-wide text-foreground mb-12 text-center">
             Dans la même collection
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {relatedProducts.map((related) => {
               const rImages = getImages(related);
               return (

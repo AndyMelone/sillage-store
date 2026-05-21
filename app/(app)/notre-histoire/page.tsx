@@ -16,7 +16,7 @@ export default function NotreHistoirePage() {
             priority
           />
         </div>
-        <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-16 lg:py-0">
+        <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-16 lg:px-24 py-16 lg:py-0">
           <span className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-6 block">
             Notre Mission
           </span>
@@ -65,7 +65,7 @@ export default function NotreHistoirePage() {
             className="object-cover"
           />
         </div>
-        <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-16 lg:py-0 bg-[#FAFAFA]">
+        <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 sm:px-16 lg:px-24 py-16 lg:py-0 bg-[#FAFAFA]">
           <span className="text-xs uppercase tracking-[0.4em] text-muted-foreground mb-6 block">
             La Qualité
           </span>

@@ -71,7 +71,7 @@ export function ProductCard({
         <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">
           {category}
         </p>
-        <h3 className="font-serif text-xl tracking-wide text-zinc-900 group-hover:text-primary transition-colors">
+        <h3 className="font-serif text-base sm:text-xl tracking-wide text-zinc-900 group-hover:text-primary transition-colors">
           {name}
         </h3>
         <div className="flex items-center justify-center gap-2">

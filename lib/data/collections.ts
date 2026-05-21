@@ -1,6 +1,6 @@
 "use server";
 
-import { sdk } from "@/lib/config";
+import { DEFAULT_REGION_ID, sdk } from "@/lib/config";
 import { HttpTypes } from "@medusajs/types";
 
 export const retrieveCollection = async (id: string) => {
@@ -30,6 +30,7 @@ export const listCollections = async (
       collections.map(async (collection) => {
         const { products } = await sdk.store.product.list({
           collection_id: collection.id,
+          region_id: DEFAULT_REGION_ID,
           limit: 20,
           offset: 0,
         });

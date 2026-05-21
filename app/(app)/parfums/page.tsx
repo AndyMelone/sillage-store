@@ -253,7 +253,7 @@ export default function ParfumsPage() {
   return (
     <main className="min-h-screen bg-background">
       <section className="pt-24 md:pt-28 pb-12 bg-secondary">
-        <div className="max-w-7xl mx-auto px-6 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -275,7 +275,7 @@ export default function ParfumsPage() {
 
       {/* Main Content */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex gap-8">
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-64 shrink-0">
@@ -358,7 +358,7 @@ export default function ParfumsPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  <div className="hidden md:flex items-center border border-border rounded-md">
+                  <div className="flex items-center border border-border rounded-md">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -433,7 +433,7 @@ export default function ParfumsPage() {
                   </Button>
                 </div>
               ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                   {filteredProducts.map((product, index) => {
                     const { image1, image2 } = getImages(product);
 
@@ -464,12 +464,12 @@ export default function ParfumsPage() {
                           )}
                         </div>
 
-                        {/* Quick Actions */}
-                        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Quick Actions — always visible on mobile */}
+                        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <Button
                             size="icon"
                             variant="secondary"
-                            className="h-8 w-8"
+                            className="h-9 w-9 shadow-sm"
                             onClick={() => toggleItem(product.id)}
                           >
                             <Heart
@@ -511,10 +511,10 @@ export default function ParfumsPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.05 }}
                       >
-                        <div className="group flex gap-6 p-4 border border-border hover:border-foreground/20 transition-colors bg-card">
+                        <div className="group flex gap-4 p-4 border border-border hover:border-foreground/20 transition-colors bg-card rounded-xl">
                           <Link
                             href={`/produit/${product.handle}`}
-                            className="relative w-32 h-32 shrink-0 overflow-hidden"
+                            className="relative w-24 h-24 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-lg"
                           >
                             <Image
                               src={image1}
@@ -523,31 +523,31 @@ export default function ParfumsPage() {
                               className="object-cover"
                             />
                           </Link>
-                          <div className="flex-1 flex flex-col justify-center">
-                            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                              {product.subtitle ||
-                                product.collection?.title ||
-                                "Parfum"}
-                            </p>
-                            <Link href={`/produit/${product.handle}`}>
-                              <h3 className="font-serif text-xl text-foreground  transition-colors">
-                                {product.title}
-                              </h3>
-                            </Link>
-                            {product.description && (
-                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                                {product.description}
+                          <div className="flex-1 flex flex-col justify-between min-w-0">
+                            <div>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                                {product.subtitle ||
+                                  product.collection?.title ||
+                                  "Parfum"}
                               </p>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-end justify-between">
-                            <span className="font-serif text-xl text-foreground">
-                              {price.toFixed(2)} XOF
-                            </span>
-                            <div className="flex gap-2">
+                              <Link href={`/produit/${product.handle}`}>
+                                <h3 className="font-serif text-lg sm:text-xl text-foreground transition-colors leading-tight">
+                                  {product.title}
+                                </h3>
+                              </Link>
+                              {product.description && (
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2 hidden sm:block">
+                                  {product.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between mt-3">
+                              <span className="font-serif text-lg text-foreground">
+                                {price.toFixed(2)} XOF
+                              </span>
                               <Button
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-9 w-9 shrink-0"
                                 onClick={() => {
                                   const variantId = product.variants?.[0]?.id;
                                   if (variantId) addItem(variantId, 1);

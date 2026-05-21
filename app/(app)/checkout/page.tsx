@@ -178,7 +178,7 @@ export default function CheckoutPage() {
   const pickupPhone = pickupSameAsInfo ? formData.phone : pickupContact.phone;
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 pt-24 pb-20 px-6 lg:px-24">
+    <div className="min-h-screen bg-zinc-50/50 pt-24 pb-20 px-4 sm:px-6 lg:px-24">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-12">
           <Button
@@ -189,7 +189,7 @@ export default function CheckoutPage() {
           >
             <ArrowLeft className="size-5" />
           </Button>
-          <h1 className="text-4xl font-serif">Finaliser la commande</h1>
+          <h1 className="text-2xl sm:text-4xl font-serif">Finaliser la commande</h1>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_400px] gap-12 items-start">

@@ -23,7 +23,7 @@ export async function BestSellersSection() {
   const { response } = await listProducts({
     pageParam: 1,
     queryParams: { limit: 3 },
-  });
+  }).catch(() => ({ response: { products: [], count: 0 }, nextPage: null }));
 
   const products = response.products;
 
@@ -31,7 +31,7 @@ export async function BestSellersSection() {
 
   return (
     <section id="best-sellers" className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-14">
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
             Les plus populaires
@@ -41,7 +41,7 @@ export async function BestSellersSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 lg:gap-10">
           {products.map((product) => {
             const { image1, image2 } = getProductImages(product);
             return (
