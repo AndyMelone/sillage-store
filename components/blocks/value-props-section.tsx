@@ -29,7 +29,7 @@ const valueProps = [
 export function ValuePropsSection() {
   return (
     <section className="bg-primary py-14 text-primary-foreground sm:py-16">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {valueProps.map((prop, index) => (
             <motion.div
