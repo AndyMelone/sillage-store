@@ -43,8 +43,8 @@ function ConnexionForm() {
 
   const getFullPhone = () => {
     const digits = phone.replace(/\D/g, "");
-    if (digits.length === 10) return `+225${digits}`;
-    if (digits.startsWith("225")) return `+${digits}`;
+    if (digits.length === 10) return `+221${digits}`;
+    if (digits.startsWith("221")) return `+${digits}`;
     return phone;
   };
 
@@ -117,13 +117,7 @@ function ConnexionForm() {
     }
   };
 
-  const Header = ({
-    title,
-    subtitle,
-  }: {
-    title: string;
-    subtitle: string;
-  }) => (
+  const Header = ({ title, subtitle }: { title: string; subtitle: string }) => (
     <div className="mb-6">
       <span className="inline-flex bg-secondary px-3 py-1 text-sm text-muted-foreground">
         Compte
@@ -179,7 +173,7 @@ function ConnexionForm() {
                   <div className="relative">
                     <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <span className="absolute left-10 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">
-                      +225
+                      +221
                     </span>
                     <Input
                       type="tel"
@@ -213,7 +207,7 @@ function ConnexionForm() {
               >
                 <Header
                   title="Vérification"
-                  subtitle={`Code envoyé au +225 ${formatPhoneDisplay(phone)} via ${otpMethod === "whatsapp" ? "WhatsApp" : "SMS"}.`}
+                  subtitle={`Code envoyé au +221 ${formatPhoneDisplay(phone)} via ${otpMethod === "whatsapp" ? "WhatsApp" : "SMS"}.`}
                 />
                 <div className="space-y-6">
                   <div className="flex justify-center">
@@ -266,7 +260,9 @@ function ConnexionForm() {
                 <div className="w-16 h-16 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto">
                   <Check className="w-8 h-8" />
                 </div>
-                <h2 className="font-heading text-2xl font-bold">{"C'est prêt !"}</h2>
+                <h2 className="font-heading text-2xl font-bold">
+                  {"C'est prêt !"}
+                </h2>
                 <p className="text-muted-foreground text-sm">
                   Votre connexion a été établie avec succès.
                   <br />
