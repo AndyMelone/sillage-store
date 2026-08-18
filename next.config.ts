@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "sillage-back-production.up.railway.app" },
+      { protocol: "https", hostname: "*.t3.storageapi.dev" },
       { protocol: "http", hostname: "localhost" },
       { protocol: "http", hostname: "localhost", port: "9002" },
     ],
