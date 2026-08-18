@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/store/use-auth-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,7 +79,7 @@ export default function AccountPage() {
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
             <div>
-              <h1 className="font-serif text-4xl mb-2">Mon compte</h1>
+              <h1 className="font-heading text-4xl font-bold tracking-tight mb-2">Mon compte</h1>
               <p className="text-muted-foreground">
                 Bienvenue, {phone}
               </p>
@@ -97,23 +98,25 @@ export default function AccountPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Card className="hover:border-foreground/20 transition-all cursor-pointer group h-full">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground mb-2 group-hover:bg-foreground group-hover:text-background transition-colors">
-                        {section.icon}
+                <Link href={section.href} className="block h-full">
+                  <Card className="hover:border-foreground/20 transition-all cursor-pointer group h-full">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground mb-2 group-hover:bg-foreground group-hover:text-background transition-colors">
+                          {section.icon}
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-1" />
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-1" />
-                    </div>
-                    <CardTitle className="font-serif text-xl">{section.title}</CardTitle>
-                    <CardDescription>{section.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="link" className="p-0 h-auto font-medium" asChild>
-                      <a href={section.href}>Gérer</a>
-                    </Button>
-                  </CardContent>
-                </Card>
+                      <CardTitle className="font-heading font-bold text-xl">{section.title}</CardTitle>
+                      <CardDescription>{section.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <span className="text-sm font-medium text-primary group-hover:underline">
+                        Gérer
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>

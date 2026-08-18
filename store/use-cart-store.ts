@@ -72,9 +72,7 @@ export const useCartStore = create<CartState>()(
         set({ isLoading: true });
         try {
           const cart = await retrieveCart();
-          if (cart) {
-            set({ cart, items: mapCartItems(cart) });
-          }
+          set({ cart, items: mapCartItems(cart) });
         } finally {
           set({ isLoading: false });
         }

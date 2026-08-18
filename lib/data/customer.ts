@@ -26,6 +26,7 @@ export async function getCustomer(): Promise<HttpTypes.StoreCustomer | null> {
       query: {
         fields: "*addresses",
       },
+      cache: "no-store",
     });
     return customer;
   } catch {
@@ -112,10 +113,36 @@ export async function listOrders() {
       query: {
         fields: "*items,*shipping_address,+total",
       },
+      cache: "no-store",
     });
     return orders;
   } catch (err) {
     console.error("List orders error:", err);
     return [];
+  }
+}
+
+export async function getOrder(orderId: string): Promise<HttpTypes.StoreOrder | null> {
+  const token = await getAuthToken();
+  if (!token) return null;
+
+  try {
+    const { order } = await sdk.client.fetch<{
+      order: HttpTypes.StoreOrder;
+    }>(`/store/orders/${orderId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      query: {
+        fields:
+          "id,display_id,status,created_at,email,*items,*shipping_address,*shipping_methods,+total,+subtotal,+shipping_total,+tax_total,currency_code",
+      },
+      cache: "no-store",
+    });
+    return order;
+  } catch (err) {
+    console.error("Get order error:", err);
+    return null;
   }
 }

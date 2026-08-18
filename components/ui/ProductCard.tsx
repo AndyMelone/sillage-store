@@ -1,9 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { useProductsStore } from "@/store/use-products-store";
 import Image from "next/image";
-import { useState } from "react";
 
 interface ProductCardProps {
   name: string;
@@ -13,6 +11,8 @@ interface ProductCardProps {
   image2?: string | null;
   category?: string;
   variantId?: string;
+  badge?: string;
+  inStock?: boolean;
 }
 
 export function ProductCard({
@@ -20,13 +20,12 @@ export function ProductCard({
   price,
   originalPrice,
   image1,
-  image2,
   category = "Eau de Parfum",
+  badge,
+  inStock = true,
 }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const { currencyCode, decimalDigits } = useProductsStore();
   const finalImage1 = image1 || "/placeholders/sillage.png";
-  const finalImage2 = image2 || "/placeholders/sillage.webp";
 
   const formatPrice = (amount: number) => {
     const value = decimalDigits === 0 ? amount : amount / 100;
@@ -38,51 +37,46 @@ export function ProductCard({
   };
 
   return (
-    <div
-      className="group cursor-pointer relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="relative aspect-3/4 overflow-hidden bg-zinc-50 mb-4 rounded-2xl border border-zinc-100/50">
+    <div className="group relative bg-background p-6 transition-colors hover:bg-secondary">
+      {badge && (
+        <span className="absolute left-4 top-4 z-10 rounded-none bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+          {badge}
+        </span>
+      )}
+
+      <div className="relative aspect-square w-full overflow-hidden p-4">
         <Image
           src={finalImage1}
           alt={name}
           fill
-          className={cn(
-            "object-cover transition-all duration-700 ease-out",
-            isHovered ? "opacity-0 scale-110" : "opacity-100 scale-100",
-          )}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-
-        <Image
-          src={finalImage2}
-          alt={`${name} - vue alternative`}
-          fill
-          className={cn(
-            "object-cover transition-all duration-700 ease-out",
-            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-90",
-          )}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-contain transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 50vw, 33vw"
         />
       </div>
 
-      <div className="space-y-1 text-center">
-        <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">
+      <div className="pt-4">
+        <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           {category}
         </p>
-        <h3 className="font-serif text-base sm:text-xl tracking-wide text-zinc-900 group-hover:text-primary transition-colors">
-          {name}
-        </h3>
-        <div className="flex items-center justify-center gap-2">
-          <p className="text-sm font-semibold text-zinc-900">
-            {formatPrice(price)}
-          </p>
-          {originalPrice && (
-            <p className="text-sm text-zinc-400 line-through">
-              {formatPrice(originalPrice)}
+        <div className="flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-foreground">
+              {name}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {inStock ? "En stock" : "Rupture de stock"}
             </p>
-          )}
+          </div>
+          <div className="flex shrink-0 items-baseline gap-2">
+            <span className="text-sm font-semibold text-foreground">
+              {formatPrice(price)}
+            </span>
+            {originalPrice && (
+              <span className="text-xs text-muted-foreground line-through">
+                {formatPrice(originalPrice)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

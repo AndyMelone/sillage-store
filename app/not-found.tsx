@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mb-6">
         Erreur 404
       </p>
-      <h1 className="text-7xl md:text-9xl font-serif mb-6 leading-none">
+      <h1 className="text-7xl md:text-9xl font-heading font-bold mb-6 leading-none">
         Introuvable
       </h1>
       <p className="text-muted-foreground text-lg max-w-md mb-12">

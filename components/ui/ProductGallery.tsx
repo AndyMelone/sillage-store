@@ -4,51 +4,51 @@ import Image from "next/image";
 import { useState } from "react";
 
 interface ProductGalleryProps {
-  image1: string;
-  image2: string;
+  images: string[];
   name: string;
 }
 
-export function ProductGallery({ image1, image2, name }: ProductGalleryProps) {
+export function ProductGallery({ images, name }: ProductGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
-  const images = [image1, image2];
+  const gallery = images.length > 0 ? images : ["/placeholders/sillage.png"];
 
   return (
-    <div className="space-y-4">
-      {/* Main Image */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
+    <div>
+      <div className="relative flex min-h-90 items-center justify-center bg-secondary p-8 md:min-h-130">
         <Image
-          src={images[selectedImage]}
+          src={gallery[selectedImage]}
           alt={name}
           fill
-          className="object-cover transition-opacity duration-500"
+          className="object-contain p-8"
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
         />
       </div>
 
-      {/* Thumbnails */}
-      <div className="flex gap-4">
-        {images.map((image, index) => (
-          <button
-            key={index}
-            onClick={() => setSelectedImage(index)}
-            className={`relative w-20 h-28 overflow-hidden bg-secondary transition-all duration-300 ${
-              selectedImage === index
-                ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
-                : "opacity-60 hover:opacity-100"
-            }`}
-          >
-            <Image
-              src={image}
-              alt={`${name} - Image ${index + 1}`}
-              fill
-              className="object-cover"
-              sizes="80px"
-            />
-          </button>
-        ))}
-      </div>
+      {gallery.length > 1 && (
+        <div className="mt-3 grid grid-cols-5 gap-3">
+          {gallery.map((image, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setSelectedImage(index)}
+              className={`relative flex aspect-square items-center justify-center border bg-secondary p-2 transition-colors ${
+                selectedImage === index
+                  ? "border-accent"
+                  : "border-transparent hover:border-border"
+              }`}
+            >
+              <Image
+                src={image}
+                alt={`${name} - vue ${index + 1}`}
+                fill
+                className="object-contain p-2"
+                sizes="120px"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -24,6 +24,7 @@ export const listCollections = async (
     const { collections, count } = await sdk.store.collection.list({
       limit: queryParams.limit as number,
       offset: queryParams.offset as number,
+      fields: "id,title,handle,created_at,updated_at,metadata",
     });
 
     const collectionsWithProducts = await Promise.all(
@@ -56,7 +57,7 @@ export const getCollectionByHandle = async (
 ): Promise<HttpTypes.StoreCollection> => {
   return sdk.client
     .fetch<{ collections: HttpTypes.StoreCollection[] }>(`/store/collections`, {
-      query: { handle, fields: "*products" },
+      query: { handle, fields: "*products,metadata" },
       cache: "no-store",
     })
     .then(({ collections }) => collections[0])

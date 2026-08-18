@@ -24,29 +24,27 @@ export function ProductActions({ variantId, productId }: ProductActionsProps) {
   const isWishlisted = mounted ? isInWishlist(productId) : false;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
+    <div>
       <Button
-        size="lg"
         onClick={() => addItem(variantId, 1)}
         disabled={!variantId}
-        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-wider text-sm py-6"
+        className="w-full rounded-none py-7 text-lg font-semibold"
       >
         Ajouter au panier
       </Button>
-      <Button
-        size="lg"
-        variant="outline"
+      <button
+        type="button"
         onClick={() => toggleItem(productId)}
         className={cn(
-          "flex-1 uppercase tracking-wider text-sm py-6 border-foreground transition-colors",
+          "mt-3 flex w-full items-center justify-center gap-2 py-2 text-sm font-medium transition-colors",
           isWishlisted
-            ? "bg-foreground text-background"
-            : "text-foreground hover:bg-foreground hover:text-background"
+            ? "text-accent"
+            : "text-muted-foreground hover:text-foreground"
         )}
       >
-        <Heart className={cn("mr-2 size-4", isWishlisted && "fill-current")} />
-        {isWishlisted ? "Dans la liste" : "Liste de souhaits"}
-      </Button>
+        <Heart className={cn("size-4", isWishlisted && "fill-current")} />
+        {isWishlisted ? "Dans la liste de souhaits" : "Ajouter à la liste de souhaits"}
+      </button>
     </div>
   );
 }

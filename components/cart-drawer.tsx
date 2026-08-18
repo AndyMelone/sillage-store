@@ -19,7 +19,6 @@ export function CartDrawer() {
   const { isOpen, closeCart, items, removeItem, updateQuantity, isLoading } =
     useCartStore();
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -31,18 +30,11 @@ export function CartDrawer() {
         side="right"
         className="flex w-full flex-col sm:max-w-md p-0 gap-0"
       >
-        <SheetHeader className="p-6 border-b">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2 text-xl font-serif">
-              <ShoppingCart className="size-5" />
-              Mon Panier
-            </SheetTitle>
-            {totalItems > 0 && (
-              <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white">
-                {totalItems} {totalItems === 1 ? "article" : "articles"}
-              </span>
-            )}
-          </div>
+        <SheetHeader className="px-6 py-5 border-b border-border">
+          <SheetTitle className="flex items-center gap-2 pr-6 font-heading text-xl font-bold">
+            <ShoppingCart className="size-5" />
+            Mon Panier
+          </SheetTitle>
           <SheetDescription className="sr-only">
             Consultez et gerez les articles de votre panier
           </SheetDescription>
@@ -50,20 +42,16 @@ export function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center p-6">
-            <div className="w-24 h-24 rounded-full bg-zinc-50 flex items-center justify-center">
-              <ShoppingBag className="size-10 text-zinc-300" />
+            <div className="flex size-24 items-center justify-center bg-secondary">
+              <ShoppingBag className="size-10 text-muted-foreground" />
             </div>
             <div className="space-y-2">
-              <p className="text-xl font-serif">Votre panier est vide</p>
+              <p className="text-xl font-heading font-bold">Votre panier est vide</p>
               <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
                 Explorez nos collections et trouvez votre sillage signature.
               </p>
             </div>
-            <Button
-              onClick={closeCart}
-              variant="outline"
-              className="mt-4 rounded-full px-8"
-            >
+            <Button onClick={closeCart} variant="outline" className="mt-4 px-8">
               Découvrir les parfums
             </Button>
           </div>
@@ -73,7 +61,7 @@ export function CartDrawer() {
               <div className="flex flex-col gap-6 py-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-4 group">
-                    <div className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-zinc-50 border border-zinc-100">
+                    <div className="relative size-24 shrink-0 overflow-hidden bg-secondary">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -83,20 +71,20 @@ export function CartDrawer() {
                         />
                       ) : (
                         <div className="flex size-full items-center justify-center">
-                          <ShoppingBag className="size-8 text-zinc-200" />
+                          <ShoppingBag className="size-8 text-muted-foreground" />
                         </div>
                       )}
                     </div>
                     <div className="flex flex-1 flex-col justify-between py-0.5">
                       <div className="space-y-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-serif text-base leading-tight group-hover:text-primary transition-colors">
+                          <h4 className="font-heading font-bold text-base leading-tight group-hover:text-accent transition-colors">
                             {item.name}
                           </h4>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-6 -mr-2 text-zinc-300 hover:text-red-500 hover:bg-transparent"
+                            className="size-6 -mr-2 text-muted-foreground hover:text-destructive hover:bg-transparent"
                             onClick={() => removeItem(item.id)}
                             disabled={isLoading}
                           >
@@ -112,11 +100,11 @@ export function CartDrawer() {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center border rounded-full px-1 py-0.5 border-zinc-200">
+                        <div className="flex items-center border border-border px-1 py-0.5">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7 rounded-full hover:bg-zinc-100"
+                            className="size-7 hover:bg-secondary"
                             onClick={() =>
                               updateQuantity(item.id, item.quantity - 1)
                             }
@@ -130,7 +118,7 @@ export function CartDrawer() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7 rounded-full hover:bg-zinc-100"
+                            className="size-7 hover:bg-secondary"
                             onClick={() =>
                               updateQuantity(item.id, item.quantity + 1)
                             }
@@ -146,7 +134,7 @@ export function CartDrawer() {
               </div>
             </ScrollArea>
 
-            <div className="p-6 border-t bg-zinc-50/50 space-y-4">
+            <div className="p-6 border-t border-border bg-secondary space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
@@ -159,11 +147,11 @@ export function CartDrawer() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Livraison</span>
-                  <span className="text-zinc-400 italic">
+                  <span className="text-muted-foreground italic">
                     {"Calcule à l'étape suivante"}
                   </span>
                 </div>
-                <div className="pt-2 flex items-center justify-between font-serif text-lg">
+                <div className="pt-2 flex items-center justify-between font-heading font-bold text-lg">
                   <span>Total</span>
                   <span>
                     {totalPrice.toLocaleString("fr-FR", {
@@ -176,8 +164,7 @@ export function CartDrawer() {
 
               <div className="flex flex-col gap-2">
                 <Button
-                  className="w-full h-12 rounded-full text-base font-medium shadow-lg shadow-zinc-200"
-                  size="lg"
+                  className="w-full py-6 text-base font-semibold"
                   asChild
                   disabled={isLoading}
                 >

@@ -1,59 +1,78 @@
-"use client";
-
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
+import { TikTok_Sans } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 
+const quickLinks = [
+  { href: "/", label: "Accueil" },
+  { href: "/parfums", label: "Parfums" },
+  { href: "/collections", label: "Collections" },
+  { href: "/notre-histoire", label: "Notre Histoire" },
+  { href: "/blog", label: "Blog" },
+  { href: "/compte", label: "Mon Compte" },
+];
+
+const supportLinks = [
+  { href: "/notre-histoire#faq", label: "Livraison" },
+  { href: "/notre-histoire#faq", label: "Retours" },
+  { href: "/notre-histoire#faq", label: "FAQ" },
+  { href: "/auth", label: "Contact" },
+];
+
 export function StackedCircularFooter() {
   return (
-    <footer className="bg-background border-t border-zinc-100 py-16">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col items-center">
-        {/* Logo Section */}
-        <Link href="/" className="group flex flex-col items-center gap-4 mb-10">
-          <div className="relative w-16 h-16 rounded-full overflow-hidden border border-zinc-50 shadow-sm transition-transform group-hover:scale-105">
+    <footer className="border-t border-border bg-[#EDEDED]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-4">
+        <div className="md:col-span-1">
+          <Link href="/" className="inline-flex items-center">
             <Image
               src="/logo/sillage.webp"
               alt="Sillage"
-              fill
-              className="object-cover"
+              width={300}
+              height={100}
+              className="h-10 w-auto object-contain"
+            />
+          </Link>
+          <p className="mt-4 max-w-xs text-sm text-muted-foreground">
+            Des fragrances d&apos;exception inspirées des plus grandes maisons
+            de parfumerie, à des prix accessibles.
+          </p>
+          <div className="mt-5 flex items-center gap-3">
+            <SocialIcon
+              icon={<Instagram className="h-4 w-4" />}
+              href="https://www.instagram.com/sillageparfumerie/?hl=fr "
+            />
+            <SocialIcon
+              icon={<Facebook className="h-4 w-4" />}
+              href="https://www.facebook.com/sillage.sn?locale=fr_FR"
             />
           </div>
-          <span className="font-serif text-3xl tracking-[0.4em] text-zinc-900 font-light">
-            SILLAGE
-          </span>
-        </Link>
-
-        {/* Navigation Simple */}
-        <nav className="flex flex-wrap justify-center gap-x-10 gap-y-4 mb-10">
-          <FooterLink href="/parfums">Parfums</FooterLink>
-          <FooterLink href="/collections">Collections</FooterLink>
-          <FooterLink href="/notre-histoire">Histoire</FooterLink>
-        </nav>
-
-        {/* Socials */}
-        <div className="flex items-center gap-8 mb-12">
-          <SocialIcon icon={<Instagram className="size-5" />} href="#" />
-          <SocialIcon icon={<Facebook className="size-5" />} href="#" />
-          <SocialIcon icon={<Twitter className="size-5" />} href="#" />
         </div>
 
-        {/* Bottom */}
-        <div className="text-center space-y-4">
-          <p className="text-[10px] tracking-[0.2em] uppercase text-zinc-400 font-medium">
-            © 2026 SILLAGE PARFUMERIE • DAKAR
-          </p>
-          <div className="flex justify-center gap-6 text-[9px] uppercase tracking-widest text-zinc-300">
-            <Link
-              href="/mentions-legales"
-              className="hover:text-zinc-500 transition-colors"
-            >
-              Légal
-            </Link>
-            <Link
-              href="/confidentialite"
-              className="hover:text-zinc-500 transition-colors"
-            >
+        <FooterColumn title="Liens Rapides" links={quickLinks} />
+        <FooterColumn title="Assistance" links={supportLinks} />
+
+        <div>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+            Contact
+          </h3>
+          <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+            <li>contact@sillageparfums.com</li>
+            <li>+221 78 175 73 73</li>
+            <li>Dakar, Sénégal</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-border/80">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 Sillage Parfumerie. Tous droits réservés.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/confidentialite" className="hover:text-accent">
               Confidentialité
+            </Link>
+            <Link href="/mentions-legales" className="hover:text-accent">
+              Mentions légales
             </Link>
           </div>
         </div>
@@ -62,20 +81,31 @@ export function StackedCircularFooter() {
   );
 }
 
-function FooterLink({
-  href,
-  children,
+function FooterColumn({
+  title,
+  links,
 }: {
-  href: string;
-  children: React.ReactNode;
+  title: string;
+  links: { href: string; label: string }[];
 }) {
   return (
-    <Link
-      href={href}
-      className="text-xs uppercase tracking-widest font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
-    >
-      {children}
-    </Link>
+    <div>
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+        {title}
+      </h3>
+      <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+        {links.map((link) => (
+          <li key={link.label}>
+            <Link
+              href={link.href}
+              className="transition-colors hover:text-accent"
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -83,7 +113,7 @@ function SocialIcon({ icon, href }: { icon: React.ReactNode; href: string }) {
   return (
     <Link
       href={href}
-      className="text-zinc-400 hover:text-zinc-900 transition-colors"
+      className="inline-flex h-9 w-9 items-center justify-center bg-white text-foreground transition-colors hover:bg-accent hover:text-white"
     >
       {icon}
     </Link>

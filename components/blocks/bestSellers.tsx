@@ -1,7 +1,11 @@
-import { ProductCard } from "@/components/ui/ProductCard";
+import {
+  PopularProductsGrid,
+  type PopularProduct,
+} from "@/components/blocks/popular-products-grid";
 import { listProducts } from "@/lib/data/products";
 import { HttpTypes } from "@medusajs/types";
-import Link from "next/link";
+
+const THIRTY_DAYS_AGO = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
 function getProductPrice(product: HttpTypes.StoreProduct): number {
   const variant = product.variants?.[0];
@@ -22,44 +26,45 @@ function getProductImages(product: HttpTypes.StoreProduct) {
 export async function BestSellersSection() {
   const { response } = await listProducts({
     pageParam: 1,
-    queryParams: { limit: 3 },
+    queryParams: { limit: 9 },
   }).catch(() => ({ response: { products: [], count: 0 }, nextPage: null }));
 
   const products = response.products;
 
   if (products.length === 0) return null;
 
-  return (
-    <section id="best-sellers" className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
-            Les plus populaires
-          </p>
-          <h2 className="font-serif text-4xl md:text-5xl text-foreground">
-            Meilleures Ventes
-          </h2>
-        </div>
+  const items: PopularProduct[] = products.map((product) => {
+    const { image1, image2 } = getProductImages(product);
+    return {
+      id: product.id,
+      handle: product.handle ?? product.id,
+      name: product.title,
+      price: getProductPrice(product),
+      image1,
+      image2,
+      category: product.subtitle || product.collection?.title || "Parfum",
+      isNew: product.created_at
+        ? new Date(product.created_at).getTime() > THIRTY_DAYS_AGO
+        : false,
+    };
+  });
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 lg:gap-10">
-          {products.map((product) => {
-            const { image1, image2 } = getProductImages(product);
-            return (
-              <Link key={product.id} href={`/produit/${product.handle}`}>
-                <ProductCard
-                  name={product.title}
-                  price={getProductPrice(product)}
-                  image1={image1}
-                  image2={image2}
-                  variantId={product.variants?.[0]?.id}
-                  category={
-                    product.subtitle || product.collection?.title || "Parfum"
-                  }
-                />
-              </Link>
-            );
-          })}
-        </div>
+  return (
+    <section id="best-sellers" className="bg-background py-16 md:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <p className="mb-6 text-center text-sm text-muted-foreground">
+          <span className="bg-secondary p-2">Produits Populaires</span>
+        </p>
+        <h2 className="mb-4 text-center font-heading text-3xl font-bold leading-tight tracking-tight text-foreground md:text-4xl lg:text-5xl">
+          Découvrez Nos <span className="text-accent">Meilleures</span>
+          <br />
+          <span className="text-accent">Ventes</span>.
+        </h2>
+        <p className="mx-auto mb-10 max-w-md text-center text-sm text-muted-foreground">
+          Des fragrances d&apos;exception, sélectionnées pour vous.
+        </p>
+
+        <PopularProductsGrid products={items} />
       </div>
     </section>
   );

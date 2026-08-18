@@ -19,8 +19,8 @@ export default async function CollectionsPage() {
               Explorez nos univers olfactifs
             </p>
           </div>
-          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-4 text-balance">
-            Nos Collections
+          <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-4 text-balance">
+            Nos <span className="text-accent">Collections</span>
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Chaque collection raconte une histoire unique, un voyage sensoriel à
@@ -42,8 +42,8 @@ export default async function CollectionsPage() {
                 const productsCount = products.length;
                 const isReversed = index % 2 === 1;
                 const heroImage =
-                  (products[0]?.thumbnail as string) ||
                   (collection?.metadata?.image as string) ||
+                  (products[0]?.thumbnail as string) ||
                   "/placeholders/sillage.png";
                 const longDescription =
                   (collection.metadata?.longDescription as string) ||
@@ -98,7 +98,7 @@ export default async function CollectionsPage() {
                       <p className="text-xs uppercase tracking-[0.3em] text-accent mb-3">
                         {productsCount} parfum{productsCount > 1 ? "s" : ""}
                       </p>
-                      <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-foreground mb-4">
+                      <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-5xl text-foreground mb-4">
                         {collection.title}
                       </h2>
                       {longDescription && (
@@ -191,7 +191,7 @@ export default async function CollectionsPage() {
       {/* CTA Section */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="font-serif text-3xl md:text-4xl mb-4">
+          <h2 className="font-heading font-bold text-3xl md:text-4xl mb-4">
             Besoin d{"'"}aide pour choisir ?
           </h2>
           <p className="text-primary-foreground/70 mb-8 max-w-xl mx-auto">

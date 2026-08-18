@@ -12,6 +12,8 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { HttpTypes } from "@medusajs/types";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { getOrderStatusColor, getOrderStatusLabel } from "@/lib/order-status";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -42,15 +44,6 @@ export default function OrdersPage() {
     loadOrders();
   }, [isMounted, isAuthenticated]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed": return "bg-green-100 text-green-700";
-      case "pending": return "bg-amber-100 text-amber-700";
-      case "canceled": return "bg-red-100 text-red-700";
-      default: return "bg-zinc-100 text-zinc-700";
-    }
-  };
-
   if (!isMounted || !isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -72,21 +65,21 @@ export default function OrdersPage() {
           </Link>
 
           <div className="flex items-center gap-4 mb-10">
-            <div className="w-12 h-12 bg-zinc-900 text-white rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-foreground text-background flex items-center justify-center">
               <Package className="size-6" />
             </div>
             <div>
-              <h1 className="text-4xl font-serif">Mes Commandes</h1>
+              <h1 className="text-4xl font-heading font-bold tracking-tight">Mes Commandes</h1>
               <p className="text-muted-foreground">Historique et suivi de vos achats</p>
             </div>
           </div>
 
           {orders.length === 0 ? (
             <Card className="border-dashed border-2 p-12 text-center">
-              <Package className="size-12 mx-auto text-zinc-200 mb-4" />
-              <h2 className="text-xl font-serif mb-2">Aucune commande trouvée</h2>
+              <Package className="size-12 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-heading font-bold mb-2">Aucune commande trouvée</h2>
               <p className="text-muted-foreground mb-8">{"Vous n'avez pas encore passé de commande sur Sillage."}</p>
-              <Button asChild className="rounded-full px-8">
+              <Button asChild className="px-8">
                 <Link href="/parfums">Découvrir nos fragrances</Link>
               </Button>
             </Card>
@@ -99,47 +92,49 @@ export default function OrdersPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
                 >
-                  <Card className="overflow-hidden border-none shadow-lg shadow-zinc-200/50 rounded-3xl group">
-                    <div className="p-6 md:p-8 flex flex-col md:flex-row gap-6">
-                      {/* Products Summary */}
-                      <div className="flex-1 space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                           <span className={cn("text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full", getStatusColor(order.status))}>
-                             {order.status}
-                           </span>
-                           <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                             <Calendar className="size-3" />
-                             {new Date(order.created_at).toLocaleDateString("fr-FR")}
-                           </span>
-                        </div>
-                        
-                        <div className="flex -space-x-4 overflow-hidden">
-                          {order.items?.map((item) => (
-                            <div key={item.id} className="relative size-16 rounded-xl border-4 border-white overflow-hidden bg-zinc-100 shadow-sm">
-                              <Image src={item.thumbnail || "/placeholder.webp"} alt={item.title} fill className="object-cover" />
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div>
-                           <h3 className="font-bold text-lg">Commande #{order.display_id || order.id.slice(0, 8)}</h3>
-                           <p className="text-sm text-muted-foreground">
-                             {order.items?.length} {order.items?.length === 1 ? "article" : "articles"} • 
-                             <span className="font-semibold text-zinc-900 ml-1">
-                                {(order.total / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                  <Link href={`/compte/commandes/${order.id}`}>
+                    <Card className="overflow-hidden group">
+                      <div className="p-6 md:p-8 flex flex-col md:flex-row gap-6">
+                        {/* Products Summary */}
+                        <div className="flex-1 space-y-4">
+                          <div className="flex items-center justify-between mb-2">
+                             <span className={cn("text-[10px] font-bold uppercase tracking-widest px-3 py-1", getOrderStatusColor(order.status))}>
+                               {getOrderStatusLabel(order.status)}
                              </span>
-                           </p>
+                             <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                               <Calendar className="size-3" />
+                               {new Date(order.created_at).toLocaleDateString("fr-FR")}
+                             </span>
+                          </div>
+
+                          <div className="flex -space-x-4 overflow-hidden">
+                            {order.items?.map((item) => (
+                              <div key={item.id} className="relative size-16 border-4 border-background overflow-hidden bg-secondary">
+                                <Image src={item.thumbnail || "/placeholder.webp"} alt={item.title} fill className="object-cover" />
+                              </div>
+                            ))}
+                          </div>
+
+                          <div>
+                             <h3 className="font-bold text-lg">Commande #{order.display_id || order.id.slice(0, 8)}</h3>
+                             <p className="text-sm text-muted-foreground">
+                               {order.items?.length} {order.items?.length === 1 ? "article" : "articles"} •
+                               <span className="font-semibold text-foreground ml-1">
+                                  {order.total.toLocaleString("fr-FR", { style: "currency", currency: "XOF" })}
+                               </span>
+                             </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end">
+                          <Button variant="outline" className="gap-2 group-hover:bg-foreground group-hover:text-background transition-all">
+                            Détails
+                            <ChevronRight className="size-4" />
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-end">
-                        <Button variant="outline" className="rounded-full gap-2 group-hover:bg-zinc-900 group-hover:text-white transition-all">
-                          Détails
-                          <ChevronRight className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  </Link>
                 </motion.div>
               ))}
             </div>
@@ -149,5 +144,3 @@ export default function OrdersPage() {
     </main>
   );
 }
-
-import { cn } from "@/lib/utils";

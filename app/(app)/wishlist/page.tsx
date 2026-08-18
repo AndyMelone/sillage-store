@@ -55,7 +55,7 @@ export default function WishlistPage() {
               <ArrowLeft className="size-4" />
               Retour à la boutique
             </Link>
-            <h1 className="font-serif text-3xl sm:text-5xl tracking-wide text-foreground">
+            <h1 className="font-heading text-3xl sm:text-5xl font-bold tracking-tight text-foreground">
               Ma Liste de Souhaits
             </h1>
           </div>
@@ -108,7 +108,7 @@ export default function WishlistPage() {
               <div className="size-24 bg-zinc-50 rounded-full flex items-center justify-center mb-8">
                 <Heart className="size-12 text-zinc-200" />
               </div>
-              <h2 className="text-3xl font-serif mb-4">Votre liste est vide</h2>
+              <h2 className="text-3xl font-heading font-bold mb-4">Votre liste est vide</h2>
               <p className="text-muted-foreground max-w-sm mb-10 mx-auto">
                 Parcourez notre collection et enregistrez vos produits favoris pour les retrouver plus tard.
               </p>

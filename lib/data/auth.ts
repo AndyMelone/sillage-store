@@ -26,20 +26,16 @@ export async function checkPhone(phone: string): Promise<AuthResponse> {
   return postToBackend<AuthResponse>("/store/auth/check-phone", { phone });
 }
 
-// ─── Flow existant — étape 2 : Vérifier le PIN + envoyer OTP (2FA) ─────
-export async function sendOtpWithPin(
+export async function sendLoginOtp(
   phone: string,
-  pin: string,
   channel: AuthMethod = "whatsapp",
 ): Promise<AuthResponse> {
   return postToBackend<AuthResponse>("/store/auth/otp/send", {
     phone,
-    pin,
     channel,
   });
 }
 
-// ─── Flow existant — étape 3 : Vérifier l'OTP → JWT ───
 export async function verifyOtpForLogin(
   phone: string,
   code: string,
@@ -50,41 +46,22 @@ export async function verifyOtpForLogin(
   });
 }
 
-// ─── Flow nouveau compte — étape 2 : Envoyer OTP sans PIN ─────────────
-export async function sendOtp(
+export async function sendRegistrationOtp(
   phone: string,
-  channel: AuthMethod,
-  type: "new" | "reset",
+  channel: AuthMethod = "whatsapp",
 ): Promise<AuthResponse> {
-  const path =
-    type === "new"
-      ? "/store/auth/otp/send-new-account"
-      : "/store/auth/otp/send-reset-pin";
-  return postToBackend<AuthResponse>(path, { phone, channel });
+  return postToBackend<AuthResponse>("/store/auth/otp/send-new-account", {
+    phone,
+    channel,
+  });
 }
 
-// ─── Flow nouveau compte — étape 3 : Créer compte OTP + PIN → JWT ─────
 export async function registerWithOtp(
   phone: string,
   otp: string,
-  pin: string,
 ): Promise<AuthResponse> {
   return postToBackend<AuthResponse>("/store/auth/register-pin", {
     phone,
     otp,
-    pin,
-  });
-}
-
-// ─── Flow reset PIN — étape 2 : OTP + nouveau PIN → JWT ───────────────
-export async function resetPin(
-  phone: string,
-  otp: string,
-  new_pin: string,
-): Promise<AuthResponse> {
-  return postToBackend<AuthResponse>("/store/auth/pin/reset", {
-    phone,
-    otp,
-    new_pin,
   });
 }

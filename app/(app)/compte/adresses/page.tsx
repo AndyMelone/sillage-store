@@ -111,7 +111,7 @@ export default function AdressesPage() {
                 <MapPin className="size-6" />
               </div>
               <div>
-                <h1 className="text-4xl font-serif">Mes Adresses</h1>
+                <h1 className="text-4xl font-heading font-bold tracking-tight">Mes Adresses</h1>
                 <p className="text-muted-foreground">Gérez vos lieux de livraison</p>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function AdressesPage() {
               >
                 <Card className="border-none shadow-xl shadow-zinc-200/50 rounded-3xl p-4">
                   <CardHeader>
-                    <CardTitle className="font-serif text-2xl">Nouvelle Adresse</CardTitle>
+                    <CardTitle className="font-heading font-bold text-2xl">Nouvelle Adresse</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleAddAddress} className="space-y-4">

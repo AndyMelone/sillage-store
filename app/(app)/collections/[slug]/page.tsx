@@ -83,8 +83,8 @@ export default function CollectionDetailPage({
   }
 
   const heroImage =
-    (products.at(0)?.thumbnail as string) ||
     (collection.metadata?.image as string) ||
+    (products.at(0)?.thumbnail as string) ||
     "/placeholders/sillage.png";
   const longDescription =
     (collection.metadata?.longDescription as string) ||
@@ -147,7 +147,7 @@ export default function CollectionDetailPage({
                 {products.length} parfum{products.length > 1 ? "s" : ""} dans
                 cette collection
               </p>
-              <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl text-white mb-4">
+              <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-4">
                 {collection.title}
               </h1>
               {longDescription && (
@@ -191,7 +191,7 @@ export default function CollectionDetailPage({
                   viewport={{ once: true }}
                   transition={{ duration: 0.6 }}
                 >
-                  <h2 className="font-serif text-2xl text-foreground mb-6">
+                  <h2 className="font-heading font-bold text-2xl text-foreground mb-6">
                     Notes Signature
                   </h2>
                   <p className="text-muted-foreground mb-6">
@@ -223,7 +223,7 @@ export default function CollectionDetailPage({
                   viewport={{ once: true }}
                   transition={{ duration: 0.6 }}
                 >
-                  <h2 className="font-serif text-2xl text-foreground mb-6">
+                  <h2 className="font-heading font-bold text-2xl text-foreground mb-6">
                     Caractéristiques
                   </h2>
                   <div className="grid grid-cols-2 gap-4">
@@ -273,7 +273,7 @@ export default function CollectionDetailPage({
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
               Découvrez nos créations
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-foreground">
+            <h2 className="font-heading font-bold text-4xl md:text-5xl text-foreground">
               Les Parfums
             </h2>
           </motion.div>
@@ -356,7 +356,7 @@ export default function CollectionDetailPage({
               <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
                 Continuez votre exploration
               </p>
-              <h2 className="font-serif text-4xl text-foreground">
+              <h2 className="font-heading font-bold text-4xl text-foreground">
                 Autres Collections
               </h2>
             </motion.div>
@@ -389,7 +389,7 @@ export default function CollectionDetailPage({
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
                         <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-                          <h3 className="font-serif text-2xl mb-1 group-hover:translate-x-2 transition-transform">
+                          <h3 className="font-heading font-bold text-2xl mb-1 group-hover:translate-x-2 transition-transform">
                             {otherCollection.title}
                           </h3>
                           {(() => {

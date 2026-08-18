@@ -5,8 +5,9 @@ import { notFound } from "next/navigation";
 import { ProductActions } from "@/components/product-actions";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { ProductGallery } from "@/components/ui/ProductGallery";
+import { ProductInfoAccordion } from "@/components/ui/ProductInfoAccordion";
 import type { HttpTypes } from "@medusajs/types";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Flame } from "lucide-react";
 
 // ─── Helpers ────────────────────────────────────────────
 function getPrice(product: HttpTypes.StoreProduct): number {
@@ -23,6 +24,12 @@ function getImages(product: HttpTypes.StoreProduct) {
     image1: product.thumbnail || images[0]?.url || "/images/placeholder.jpg",
     image2: images[1]?.url || product.thumbnail || "/images/placeholder.jpg",
   };
+}
+
+function getGalleryImages(product: HttpTypes.StoreProduct): string[] {
+  const images = product.images?.map((img) => img.url).filter(Boolean) ?? [];
+  if (images.length > 0) return images;
+  return product.thumbnail ? [product.thumbnail] : [];
 }
 
 function getMetadata(product: HttpTypes.StoreProduct, key: string): string {
@@ -78,12 +85,15 @@ export default async function ProductPage({
   }
 
   const price = getPrice(product);
-  const { image1, image2 } = getImages(product);
+  const galleryImages = getGalleryImages(product);
   const notes = getNotesFromMetadata(product);
   const volume = getMetadata(product, "volume") || "100ml";
   const concentration =
     getMetadata(product, "concentration") || "Eau de Parfum";
   const defaultVariantId = product.variants?.[0]?.id || "";
+  const inventoryQuantity = product.variants?.[0]?.inventory_quantity;
+  const hasNotes =
+    notes.top.length > 0 || notes.heart.length > 0 || notes.base.length > 0;
 
   // Charger les produits de la même collection pour les suggestions
   let relatedProducts: HttpTypes.StoreProduct[] = [];
@@ -99,6 +109,67 @@ export default async function ProductPage({
       .slice(0, 4);
   }
 
+  const accordionItems = [
+    {
+      title: "Description",
+      content: product.description || "Aucune description disponible.",
+    },
+    ...(hasNotes
+      ? [
+          {
+            title: "Notes Olfactives",
+            content: (
+              <div className="grid grid-cols-3 gap-4">
+                {notes.top.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wider text-foreground">
+                      Tête
+                    </p>
+                    <p>{notes.top.join(", ")}</p>
+                  </div>
+                )}
+                {notes.heart.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wider text-foreground">
+                      Cœur
+                    </p>
+                    <p>{notes.heart.join(", ")}</p>
+                  </div>
+                )}
+                {notes.base.length > 0 && (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wider text-foreground">
+                      Fond
+                    </p>
+                    <p>{notes.base.join(", ")}</p>
+                  </div>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
+    {
+      title: "Détails",
+      content: (
+        <div className="flex gap-8">
+          <div>
+            <p className="mb-1 text-xs uppercase tracking-wider text-foreground">
+              Volume
+            </p>
+            <p>{volume}</p>
+          </div>
+          <div>
+            <p className="mb-1 text-xs uppercase tracking-wider text-foreground">
+              Concentration
+            </p>
+            <p>{concentration}</p>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-background">
       {/* Back Link */}
@@ -113,109 +184,49 @@ export default async function ProductPage({
       </div>
 
       {/* Product Details */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="grid gap-8 lg:grid-cols-[1.06fr_1fr]">
           {/* Product Gallery */}
-          <ProductGallery
-            image1={image1}
-            image2={image2}
-            name={product.title}
-          />
+          <ProductGallery images={galleryImages} name={product.title} />
 
           {/* Product Info */}
-          <div className="flex flex-col justify-center">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-3">
+          <div className="pt-1">
+            <span className="inline-flex bg-secondary px-2 py-1 text-xs text-muted-foreground">
               {product.subtitle || product.collection?.title || "Parfum"}
-            </p>
-            <h1 className="font-serif text-4xl md:text-5xl tracking-wide text-foreground mb-4">
+            </span>
+            <h1 className="mt-3 font-heading text-4xl font-bold tracking-tight text-foreground">
               {product.title}
             </h1>
-            <p className="text-2xl font-medium text-foreground mb-8">
-              {price.toFixed(2)} XOF
-            </p>
-
-            {product.description && (
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                {product.description}
+            {product.subtitle && (
+              <p className="mt-1 text-2xl text-muted-foreground">
+                {product.subtitle}
               </p>
             )}
+            <p className="mt-4 font-heading text-5xl font-bold text-accent">
+              {price.toLocaleString("fr-FR", {
+                style: "currency",
+                currency: "XOF",
+                maximumFractionDigits: 0,
+              })}
+            </p>
 
-            {/* Notes */}
-            {(notes.top.length > 0 ||
-              notes.heart.length > 0 ||
-              notes.base.length > 0) && (
-              <div className="space-y-6 mb-10">
-                <h3 className="font-serif text-lg tracking-wide text-foreground">
-                  Notes Olfactives
-                </h3>
-                <div className="grid grid-cols-3 gap-4 sm:gap-6">
-                  {notes.top.length > 0 && (
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                        Tête
-                      </p>
-                      <ul className="space-y-1">
-                        {notes.top.map((note) => (
-                          <li key={note} className="text-sm text-foreground">
-                            {note}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {notes.heart.length > 0 && (
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                        Coeur
-                      </p>
-                      <ul className="space-y-1">
-                        {notes.heart.map((note) => (
-                          <li key={note} className="text-sm text-foreground">
-                            {note}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {notes.base.length > 0 && (
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                        Fond
-                      </p>
-                      <ul className="space-y-1">
-                        {notes.base.map((note) => (
-                          <li key={note} className="text-sm text-foreground">
-                            {note}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Product Details */}
-            <div className="flex gap-8 mb-10 pb-10 border-b border-border">
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Volume
-                </p>
-                <p className="text-sm text-foreground">{volume}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Concentration
-                </p>
-                <p className="text-sm text-foreground">{concentration}</p>
-              </div>
-            </div>
-
-            {/* Add to Cart & Wishlist */}
             <ProductActions
               variantId={defaultVariantId}
               productId={product.id}
             />
+
+            <div className="mt-6 flex items-center justify-center gap-2 bg-secondary px-4 py-3 text-base text-muted-foreground">
+              <Flame className="h-4 w-4 text-accent" />
+              <span>
+                {typeof inventoryQuantity === "number"
+                  ? inventoryQuantity > 0
+                    ? `Plus que ${inventoryQuantity} en stock`
+                    : "Rupture de stock"
+                  : "En stock"}
+              </span>
+            </div>
+
+            <ProductInfoAccordion items={accordionItems} />
           </div>
         </div>
       </section>
@@ -223,8 +234,8 @@ export default async function ProductPage({
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 py-20 border-t border-border">
-          <h2 className="font-serif text-3xl tracking-wide text-foreground mb-12 text-center">
-            Dans la même collection
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground mb-12 text-center">
+            Dans la même <span className="text-accent">collection</span>
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {relatedProducts.map((related) => {

@@ -3,6 +3,7 @@
 import { DEFAULT_REGION_ID, sdk } from "@/lib/config";
 import { HttpTypes } from "@medusajs/types";
 import { cookies } from "next/headers";
+import { getAuthToken } from "@/lib/data/customer";
 
 const CART_ID_COOKIE = "_medusa_cart_id";
 
@@ -109,7 +110,26 @@ export async function deleteLineItem(lineId: string) {
   await sdk.store.cart.deleteLineItem(cartId, lineId);
 }
 
-// ─── Checkout Actions ──────────────────────────────────
+// Sans cet appel, le panier anonyme n'est jamais rattaché au customer_id et n'apparaît pas dans "Mes commandes".
+export async function transferCartToCustomer() {
+  const cartId = await getCartId();
+  const token = await getAuthToken();
+  if (!cartId || !token) return null;
+
+  return await sdk.client
+    .fetch<{ cart: HttpTypes.StoreCart }>(`/store/carts/${cartId}/customer`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {},
+    })
+    .then(({ cart }) => cart)
+    .catch((err) => {
+      console.error("Transfer cart to customer error:", err);
+      return null;
+    });
+}
 
 export async function listShippingOptions() {
   const cartId = await getCartId();
@@ -144,18 +164,20 @@ export async function initiatePayment() {
   if (!cartId) return null;
 
   // Step 1: Create payment collection for the cart
-  const cart = await sdk.client
-    .fetch<{ cart: HttpTypes.StoreCart }>(
-      `/store/carts/${cartId}/payment-collections`,
-      { method: "POST", body: {} },
+  const created = await sdk.client
+    .fetch<{ payment_collection: { id: string } }>(
+      `/store/payment-collections`,
+      { method: "POST", body: { cart_id: cartId } },
     )
-    .then(({ cart }) => cart)
     .catch((err) => {
       console.error("Create payment collection error:", err);
       return null;
     });
 
-  if (!cart?.payment_collection?.id) return null;
+  if (!created?.payment_collection?.id) return null;
+
+  const cart = await retrieveCart(cartId);
+  if (!cart) return null;
 
   // Step 2: Create a payment session with the manual/COD provider
   await sdk.store.payment

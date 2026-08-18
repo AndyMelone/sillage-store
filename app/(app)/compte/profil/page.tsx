@@ -108,11 +108,11 @@ export default function ProfilPage() {
           <Card className="border-none shadow-xl shadow-zinc-200/50 rounded-3xl overflow-hidden">
             <CardHeader className="bg-zinc-50 border-b p-8">
               <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 bg-zinc-900 text-white rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center">
                   <User className="size-6" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-serif">
+                  <CardTitle className="text-2xl font-heading font-bold">
                     Mes Informations
                   </CardTitle>
                   <CardDescription>

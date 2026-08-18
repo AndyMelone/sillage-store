@@ -10,6 +10,7 @@ import {
   completeCart,
   initiatePayment,
   listShippingOptions,
+  transferCartToCustomer,
   updateCart,
 } from "@/lib/data/cart";
 import { getCustomer } from "@/lib/data/customer";
@@ -75,13 +76,12 @@ export default function CheckoutPage() {
           });
         }
       });
+      transferCartToCustomer();
     }
   }, [isAuthenticated]);
 
-  const isRetrait = shippingOptions
-    .find((o) => o.id === selectedOptionId)
-    ?.name.toLowerCase()
-    .includes("retrait");
+  const isRetrait =
+    shippingOptions.find((o) => o.id === selectedOptionId)?.type?.code === "pickup";
 
   const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,14 +151,14 @@ export default function CheckoutPage() {
   if (items.length === 0 && step !== "success") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-zinc-50 rounded-full flex items-center justify-center mb-8">
-          <ShoppingBag className="size-12 text-zinc-200" />
+        <div className="w-24 h-24 bg-secondary flex items-center justify-center mb-8">
+          <ShoppingBag className="size-12 text-muted-foreground" />
         </div>
-        <h1 className="text-4xl font-serif mb-4">Votre panier est vide</h1>
+        <h1 className="text-4xl font-heading font-bold tracking-tight mb-4">Votre panier est vide</h1>
         <p className="text-muted-foreground mb-10 max-w-sm">
           Vous devez ajouter des articles avant de passer commande.
         </p>
-        <Button asChild className="rounded-full px-12 h-14 text-lg">
+        <Button asChild className="px-12 h-14 text-lg">
           <Link href="/parfums">Découvrir les parfums</Link>
         </Button>
       </div>
@@ -178,35 +178,34 @@ export default function CheckoutPage() {
   const pickupPhone = pickupSameAsInfo ? formData.phone : pickupContact.phone;
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 pt-24 pb-20 px-4 sm:px-6 lg:px-24">
+    <div className="min-h-screen bg-background pt-24 pb-20 px-4 sm:px-6 lg:px-24">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-12">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.back()}
-            className="rounded-full"
           >
             <ArrowLeft className="size-5" />
           </Button>
-          <h1 className="text-2xl sm:text-4xl font-serif">Finaliser la commande</h1>
+          <h1 className="text-2xl sm:text-4xl font-heading font-bold tracking-tight">Finaliser la commande</h1>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_400px] gap-12 items-start">
           <div className="space-y-8">
             {/* Steps Indicator */}
             <div className="flex justify-between max-w-md mx-auto mb-12 relative">
-              <div className="absolute top-5 left-0 right-0 h-[2px] bg-zinc-200 z-0" />
+              <div className="absolute top-5 left-0 right-0 h-[2px] bg-border z-0" />
               {steps.map((s, idx) => (
                 <div key={s.id} className="flex flex-col items-center gap-2 relative">
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-2 z-10",
+                      "w-10 h-10 flex items-center justify-center transition-all duration-500 border-2 z-10",
                       step === s.id
-                        ? "bg-zinc-900 border-zinc-900 text-white scale-110 shadow-lg"
+                        ? "bg-foreground border-foreground text-background scale-110"
                         : steps.findIndex((x) => x.id === step) > idx
-                          ? "bg-green-500 border-green-500 text-white"
-                          : "bg-white border-zinc-200 text-zinc-400",
+                          ? "bg-accent border-accent text-accent-foreground"
+                          : "bg-background border-border text-muted-foreground",
                     )}
                   >
                     {steps.findIndex((x) => x.id === step) > idx ? (
@@ -218,7 +217,7 @@ export default function CheckoutPage() {
                   <span
                     className={cn(
                       "text-[10px] font-bold uppercase tracking-widest transition-colors",
-                      step === s.id ? "text-zinc-900" : "text-zinc-400",
+                      step === s.id ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
                     {s.label}
@@ -229,9 +228,9 @@ export default function CheckoutPage() {
 
             {/* ── STEP 1 : Informations ── */}
             {step === "info" && (
-              <Card className="border-none shadow-xl shadow-zinc-200/50 rounded-3xl p-4">
+              <Card className="p-4">
                 <CardHeader>
-                  <CardTitle className="font-serif text-2xl">Vos informations</CardTitle>
+                  <CardTitle className="font-heading font-bold text-2xl">Vos informations</CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Ces informations seront utilisées pour votre livraison.
                   </p>
@@ -248,7 +247,7 @@ export default function CheckoutPage() {
                           placeholder="Aminata"
                           value={formData.first_name}
                           onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                          className="h-14 rounded-2xl bg-zinc-50/50 border-zinc-200 focus:ring-zinc-900 focus:border-zinc-900"
+                          className="h-14 rounded-none bg-secondary border-border focus:border-accent"
                           required
                         />
                       </div>
@@ -260,7 +259,7 @@ export default function CheckoutPage() {
                           placeholder="Diallo"
                           value={formData.last_name}
                           onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                          className="h-14 rounded-2xl bg-zinc-50/50 border-zinc-200 focus:ring-zinc-900 focus:border-zinc-900"
+                          className="h-14 rounded-none bg-secondary border-border focus:border-accent"
                           required
                         />
                       </div>
@@ -272,7 +271,7 @@ export default function CheckoutPage() {
                         Numéro de téléphone
                       </label>
                       <div className="flex gap-3">
-                        <div className="h-14 px-4 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center text-sm font-medium text-zinc-500 shrink-0">
+                        <div className="h-14 px-4 bg-secondary border border-border flex items-center text-sm font-medium text-muted-foreground shrink-0">
                           🇸🇳 +221
                         </div>
                         <Input
@@ -280,7 +279,7 @@ export default function CheckoutPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="h-14 rounded-2xl bg-zinc-50/50 border-zinc-200 focus:ring-zinc-900 focus:border-zinc-900 flex-1"
+                          className="h-14 rounded-none bg-secondary border-border focus:border-accent flex-1"
                           required
                         />
                       </div>
@@ -296,7 +295,7 @@ export default function CheckoutPage() {
                           placeholder="Dakar / Plateau"
                           value={formData.city}
                           onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                          className="h-14 rounded-2xl bg-zinc-50/50 border-zinc-200 focus:ring-zinc-900 focus:border-zinc-900"
+                          className="h-14 rounded-none bg-secondary border-border focus:border-accent"
                           required
                         />
                       </div>
@@ -308,7 +307,7 @@ export default function CheckoutPage() {
                           placeholder="Médina, Rue 10, près de..."
                           value={formData.address_1}
                           onChange={(e) => setFormData({ ...formData, address_1: e.target.value })}
-                          className="h-14 rounded-2xl bg-zinc-50/50 border-zinc-200 focus:ring-zinc-900 focus:border-zinc-900"
+                          className="h-14 rounded-none bg-secondary border-border focus:border-accent"
                           required
                         />
                       </div>
@@ -316,14 +315,14 @@ export default function CheckoutPage() {
 
                     <div className="pt-4">
                       {error && (
-                        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3 mb-4">
+                        <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 mb-4">
                           {error}
                         </p>
                       )}
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-16 rounded-full text-lg font-bold shadow-2xl shadow-zinc-200 bg-zinc-900 hover:bg-zinc-800 transition-all active:scale-[0.98]"
+                        className="w-full h-16 text-lg font-bold"
                       >
                         {isLoading ? <Spinner className="mr-2" /> : "Continuer vers la livraison"}
                       </Button>
@@ -338,9 +337,9 @@ export default function CheckoutPage() {
 
             {/* ── STEP 2 : Livraison ── */}
             {step === "shipping" && (
-              <Card className="border-none shadow-xl shadow-zinc-200/50 rounded-3xl p-4">
+              <Card className="p-4">
                 <CardHeader>
-                  <CardTitle className="font-serif text-2xl">Mode de livraison</CardTitle>
+                  <CardTitle className="font-heading font-bold text-2xl">Mode de livraison</CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Choisissez comment vous souhaitez recevoir votre commande.
                   </p>
@@ -348,24 +347,24 @@ export default function CheckoutPage() {
                 <CardContent className="space-y-6">
                   <div className="space-y-3">
                     {shippingOptions.map((option) => {
-                      const isPickup = option.name.toLowerCase().includes("retrait");
+                      const isPickup = option.type?.code === "pickup";
                       const selected = selectedOptionId === option.id;
                       return (
                         <div
                           key={option.id}
                           onClick={() => setSelectedOptionId(option.id)}
                           className={cn(
-                            "border-2 rounded-2xl p-5 flex items-center justify-between cursor-pointer transition-all",
+                            "border-2 p-5 flex items-center justify-between cursor-pointer transition-all",
                             selected
-                              ? "border-zinc-900 bg-zinc-50 shadow-md"
-                              : "border-zinc-100 hover:border-zinc-200",
+                              ? "border-foreground bg-secondary"
+                              : "border-border hover:border-foreground/30",
                           )}
                         >
                           <div className="flex items-center gap-4">
                             <div
                               className={cn(
-                                "w-11 h-11 rounded-xl flex items-center justify-center transition-colors shrink-0",
-                                selected ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-400",
+                                "w-11 h-11 flex items-center justify-center transition-colors shrink-0",
+                                selected ? "bg-foreground text-background" : "bg-secondary text-muted-foreground",
                               )}
                             >
                               {isPickup ? (
@@ -398,16 +397,16 @@ export default function CheckoutPage() {
 
                   {/* Retrait en magasin — contact info */}
                   {isRetrait && (
-                    <div className="mt-2 rounded-2xl border border-zinc-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-400">
+                    <div className="mt-2 border border-border overflow-hidden animate-in fade-in slide-in-from-top-2 duration-400">
                       {/* Store info */}
-                      <div className="p-5 bg-zinc-50 flex items-start gap-4 border-b border-zinc-100">
-                        <div className="size-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center shrink-0">
+                      <div className="p-5 bg-secondary flex items-start gap-4 border-b border-border">
+                        <div className="size-10 bg-foreground text-background flex items-center justify-center shrink-0">
                           <MapPin className="size-5" />
                         </div>
                         <div>
                           <p className="font-bold text-sm">Showroom Sillage</p>
                           <p className="text-sm text-muted-foreground">Dakar, Sénégal</p>
-                          <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold mt-1">
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mt-1">
                             Retrait sur rendez-vous
                           </p>
                         </div>
@@ -415,7 +414,7 @@ export default function CheckoutPage() {
 
                       {/* Pickup contact toggle */}
                       <div className="p-5 space-y-4">
-                        <p className="text-sm font-bold text-zinc-700">
+                        <p className="text-sm font-bold text-foreground">
                           Qui viendra récupérer la commande ?
                         </p>
                         <div className="grid grid-cols-2 gap-3">
@@ -423,16 +422,16 @@ export default function CheckoutPage() {
                             type="button"
                             onClick={() => setPickupSameAsInfo(true)}
                             className={cn(
-                              "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center",
+                              "flex flex-col items-center gap-2 p-4 border-2 transition-all text-center",
                               pickupSameAsInfo
-                                ? "border-zinc-900 bg-zinc-50"
-                                : "border-zinc-100 hover:border-zinc-200",
+                                ? "border-foreground bg-secondary"
+                                : "border-border hover:border-foreground/30",
                             )}
                           >
                             <UserCheck
                               className={cn(
                                 "size-6",
-                                pickupSameAsInfo ? "text-zinc-900" : "text-zinc-400",
+                                pickupSameAsInfo ? "text-foreground" : "text-muted-foreground",
                               )}
                             />
                             <span className="text-[11px] font-bold uppercase tracking-wider">
@@ -443,16 +442,16 @@ export default function CheckoutPage() {
                             type="button"
                             onClick={() => setPickupSameAsInfo(false)}
                             className={cn(
-                              "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center",
+                              "flex flex-col items-center gap-2 p-4 border-2 transition-all text-center",
                               !pickupSameAsInfo
-                                ? "border-zinc-900 bg-zinc-50"
-                                : "border-zinc-100 hover:border-zinc-200",
+                                ? "border-foreground bg-secondary"
+                                : "border-border hover:border-foreground/30",
                             )}
                           >
                             <UserPlus
                               className={cn(
                                 "size-6",
-                                !pickupSameAsInfo ? "text-zinc-900" : "text-zinc-400",
+                                !pickupSameAsInfo ? "text-foreground" : "text-muted-foreground",
                               )}
                             />
                             <span className="text-[11px] font-bold uppercase tracking-wider">
@@ -462,10 +461,10 @@ export default function CheckoutPage() {
                         </div>
 
                         {pickupSameAsInfo ? (
-                          <div className="flex items-center gap-3 p-4 rounded-2xl bg-green-50 border border-green-100">
-                            <CheckCircle2 className="size-5 text-green-600 shrink-0" />
+                          <div className="flex items-center gap-3 p-4 bg-secondary border border-border">
+                            <CheckCircle2 className="size-5 text-accent shrink-0" />
                             <div>
-                              <p className="text-sm font-bold text-zinc-900">
+                              <p className="text-sm font-bold text-foreground">
                                 {formData.first_name} {formData.last_name}
                               </p>
                               <p className="text-xs text-muted-foreground">{formData.phone}</p>
@@ -484,7 +483,7 @@ export default function CheckoutPage() {
                                   onChange={(e) =>
                                     setPickupContact({ ...pickupContact, first_name: e.target.value })
                                   }
-                                  className="h-12 rounded-xl bg-zinc-50/50 border-zinc-200"
+                                  className="h-12 rounded-none bg-secondary border-border"
                                 />
                               </div>
                               <div className="space-y-1.5">
@@ -497,7 +496,7 @@ export default function CheckoutPage() {
                                   onChange={(e) =>
                                     setPickupContact({ ...pickupContact, last_name: e.target.value })
                                   }
-                                  className="h-12 rounded-xl bg-zinc-50/50 border-zinc-200"
+                                  className="h-12 rounded-none bg-secondary border-border"
                                 />
                               </div>
                             </div>
@@ -512,7 +511,7 @@ export default function CheckoutPage() {
                                 onChange={(e) =>
                                   setPickupContact({ ...pickupContact, phone: e.target.value })
                                 }
-                                className="h-12 rounded-xl bg-zinc-50/50 border-zinc-200"
+                                className="h-12 rounded-none bg-secondary border-border"
                               />
                             </div>
                           </div>
@@ -521,22 +520,45 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
+                  {/* Livraison à domicile — confirmation de l'adresse déjà saisie */}
+                  {!isRetrait && selectedOptionId && (
+                    <div className="mt-2 border border-border overflow-hidden animate-in fade-in slide-in-from-top-2 duration-400">
+                      <div className="p-5 bg-secondary flex items-start gap-4">
+                        <div className="size-10 bg-foreground text-background flex items-center justify-center shrink-0">
+                          <Truck className="size-5" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">
+                            Livraison prévue à cette adresse
+                          </p>
+                          <p className="font-bold text-sm">
+                            {formData.first_name} {formData.last_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {formData.address_1}, {formData.city}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{formData.phone}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {error && (
-                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
+                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3">
                       {error}
                     </p>
                   )}
                   <Button
                     onClick={handleShippingSubmit}
                     disabled={isLoading || !selectedOptionId}
-                    className="w-full h-14 rounded-full text-lg font-medium shadow-lg shadow-zinc-200"
+                    className="w-full h-14 text-lg font-medium"
                   >
                     {isLoading ? <Spinner className="mr-2" /> : "Continuer vers le paiement"}
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => { setStep("info"); setError(null); }}
-                    className="w-full rounded-full"
+                    className="w-full"
                   >
                     Retour aux infos
                   </Button>
@@ -546,32 +568,31 @@ export default function CheckoutPage() {
 
             {/* ── STEP 3 : Paiement ── */}
             {step === "payment" && (
-              <Card className="border-none shadow-xl shadow-zinc-200/50 rounded-3xl p-4">
+              <Card className="p-4">
                 <CardHeader>
-                  <CardTitle className="font-serif text-2xl">Paiement</CardTitle>
+                  <CardTitle className="font-heading font-bold text-2xl">Paiement</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Confirmez votre commande — le paiement se fait à la réception.
+                    Le paiement en ligne n&apos;est pas disponible pour le moment.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Main message */}
-                  <div className="p-8 bg-zinc-900 rounded-[2rem] text-center space-y-5 shadow-2xl shadow-zinc-200 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                    <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto backdrop-blur-md border border-white/10">
-                      <CreditCard className="size-10 text-white" />
+                  <div className="p-8 bg-foreground text-center space-y-5 relative overflow-hidden">
+                    <div className="w-20 h-20 bg-background/10 flex items-center justify-center mx-auto backdrop-blur-md border border-background/10">
+                      <CreditCard className="size-10 text-background" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-xl font-serif text-white">
-                        Paiement à la récupération
+                      <h3 className="text-xl font-heading font-bold text-background">
+                        Paiement en ligne indisponible
                       </h3>
-                      <p className="text-sm text-zinc-400 max-w-[260px] mx-auto leading-relaxed">
-                        Le paiement en ligne est en cours de développement. Vous réglez à la
-                        réception de votre commande.
+                      <p className="text-sm text-background/60 max-w-[260px] mx-auto leading-relaxed">
+                        Cette fonctionnalité n&apos;est pas encore disponible. Vous réglerez
+                        directement à la réception ou au retrait de votre commande.
                       </p>
                     </div>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-background/5 border border-background/10">
+                      <span className="w-2 h-2 bg-accent animate-pulse" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-background/80">
                         Aucun paiement requis maintenant
                       </span>
                     </div>
@@ -579,23 +600,23 @@ export default function CheckoutPage() {
 
                   {/* How to pay */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-100 flex flex-col items-center text-center gap-3">
-                      <div className="size-11 rounded-full bg-white flex items-center justify-center border border-zinc-100 shadow-sm">
-                        <Truck className="size-5 text-zinc-900" />
+                    <div className="p-5 bg-secondary border border-border flex flex-col items-center text-center gap-3">
+                      <div className="size-11 bg-background flex items-center justify-center border border-border">
+                        <Truck className="size-5 text-foreground" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                           Livraison à domicile
                         </p>
                         <p className="text-xs font-medium mt-0.5">Payez au livreur</p>
                       </div>
                     </div>
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-100 flex flex-col items-center text-center gap-3">
-                      <div className="size-11 rounded-full bg-white flex items-center justify-center border border-zinc-100 shadow-sm">
-                        <Store className="size-5 text-zinc-900" />
+                    <div className="p-5 bg-secondary border border-border flex flex-col items-center text-center gap-3">
+                      <div className="size-11 bg-background flex items-center justify-center border border-border">
+                        <Store className="size-5 text-foreground" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                           Retrait en boutique
                         </p>
                         <p className="text-xs font-medium mt-0.5">Payez en magasin</p>
@@ -605,11 +626,11 @@ export default function CheckoutPage() {
 
                   {/* Récap retrait si applicable */}
                   {isRetrait && (
-                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100 space-y-1 animate-in fade-in duration-300">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                    <div className="p-4 bg-secondary border border-border space-y-1 animate-in fade-in duration-300">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         Retrait prévu par
                       </p>
-                      <p className="font-bold text-zinc-900">{pickupName || "—"}</p>
+                      <p className="font-bold text-foreground">{pickupName || "—"}</p>
                       {pickupPhone && (
                         <p className="text-sm text-muted-foreground">{pickupPhone}</p>
                       )}
@@ -618,14 +639,14 @@ export default function CheckoutPage() {
 
                   <div className="pt-2 space-y-4">
                     {error && (
-                      <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
+                      <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3">
                         {error}
                       </p>
                     )}
                     <Button
                       onClick={handlePaymentSubmit}
                       disabled={isLoading}
-                      className="w-full h-16 rounded-full text-lg font-bold shadow-2xl shadow-zinc-200 bg-zinc-900 hover:bg-zinc-800 transition-all active:scale-[0.98]"
+                      className="w-full h-16 text-lg font-bold"
                     >
                       {isLoading ? <Spinner className="mr-2" /> : "Confirmer ma commande"}
                     </Button>
@@ -633,7 +654,7 @@ export default function CheckoutPage() {
                   <Button
                     variant="ghost"
                     onClick={() => { setStep("shipping"); setError(null); }}
-                    className="w-full rounded-full"
+                    className="w-full"
                   >
                     Retour à la livraison
                   </Button>
@@ -644,31 +665,31 @@ export default function CheckoutPage() {
             {/* ── SUCCESS ── */}
             {step === "success" && order && (
               <div className="text-center space-y-10 py-12">
-                <div className="w-24 h-24 bg-zinc-900 text-white rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-zinc-200 animate-in zoom-in duration-700">
+                <div className="w-24 h-24 bg-foreground text-background flex items-center justify-center mx-auto animate-in zoom-in duration-700">
                   <CheckCircle2 className="size-12" />
                 </div>
                 <div className="space-y-3">
-                  <h2 className="text-5xl font-serif">Merci pour votre commande !</h2>
+                  <h2 className="text-5xl font-heading font-bold">Merci pour votre commande !</h2>
                   <p className="text-xl text-muted-foreground">
                     Commande #{order.display_id || order.id.slice(0, 8)} confirmée.
                   </p>
                   <p className="text-muted-foreground">
                     Nous vous contacterons au{" "}
-                    <span className="font-bold text-zinc-900">{formData.phone}</span> pour
+                    <span className="font-bold text-foreground">{formData.phone}</span> pour
                     organiser votre livraison.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
                   <Button
                     asChild
-                    className="rounded-full px-12 h-14 text-lg shadow-xl shadow-zinc-200"
+                    className="px-12 h-14 text-lg"
                   >
                     <Link href="/">{"Retour à l'accueil"}</Link>
                   </Button>
                   <Button
                     variant="outline"
                     asChild
-                    className="rounded-full px-12 h-14 text-lg"
+                    className="px-12 h-14 text-lg"
                   >
                     <Link href="/compte/commandes">Voir mes commandes</Link>
                   </Button>
@@ -680,15 +701,15 @@ export default function CheckoutPage() {
           {/* Sidebar Summary */}
           {step !== "success" && (
             <div className="sticky top-32 space-y-6">
-              <Card className="border-none shadow-2xl shadow-zinc-200/50 rounded-3xl overflow-hidden">
-                <CardHeader className="bg-zinc-50 border-b p-6">
-                  <CardTitle className="font-serif text-xl">Récapitulatif</CardTitle>
+              <Card className="overflow-hidden">
+                <CardHeader className="bg-secondary border-b border-border p-6">
+                  <CardTitle className="font-heading font-bold text-xl">Récapitulatif</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <div className="space-y-6 max-h-[400px] overflow-auto pr-2 custom-scrollbar">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-4">
-                        <div className="relative size-20 shrink-0 rounded-2xl overflow-hidden border bg-zinc-50">
+                        <div className="relative size-20 shrink-0 overflow-hidden border border-border bg-secondary">
                           <Image
                             src={item.image || "/placeholder.webp"}
                             alt={item.name}
@@ -726,7 +747,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Livraison</span>
-                      <span className="text-zinc-900 font-medium">
+                      <span className="text-foreground font-medium">
                         {step === "info"
                           ? "Calculé à l'étape suivante"
                           : cart?.shipping_total != null
@@ -740,7 +761,7 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <Separator className="my-4" />
-                    <div className="flex justify-between text-2xl font-serif">
+                    <div className="flex justify-between text-2xl font-heading font-bold">
                       <span>Total</span>
                       <span className="font-bold">
                         {(cart?.total ?? totalPrice).toLocaleString("fr-FR", {

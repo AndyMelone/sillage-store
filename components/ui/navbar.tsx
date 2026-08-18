@@ -2,20 +2,12 @@
 
 import {
   ChevronRight,
-  Citrus,
-  Droplets,
-  Flame,
-  Flower2,
-  Gem,
   Heart,
   Loader2,
   Menu,
   Search,
   ShoppingCart,
-  Star,
-  TreePine,
   User,
-  Wind,
 } from "lucide-react";
 
 import {
@@ -39,7 +31,6 @@ import {
   CommandInput,
   CommandList,
 } from "@/components/ui/command";
-import { listCollections } from "@/lib/data/collections";
 import { searchProducts } from "@/lib/data/products";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useCartStore } from "@/store/use-cart-store";
@@ -49,18 +40,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
-// Palette of icons to assign to collections dynamically
-const COLLECTION_ICONS = [
-  Gem,
-  Flower2,
-  TreePine,
-  Citrus,
-  Flame,
-  Droplets,
-  Wind,
-  Star,
-];
 
 interface MenuItem {
   title: string;
@@ -97,9 +76,6 @@ export default function Navbar({
   const { checkAuth, isAuthenticated } = useAuthStore();
   const { openCart, items } = useCartStore();
   const { itemIds: wishlistItems } = useWishlistStore();
-  const [collections, setCollections] = useState<HttpTypes.StoreCollection[]>(
-    [],
-  );
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -113,33 +89,11 @@ export default function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [checkAuth]);
 
-  useEffect(() => {
-    listCollections()
-      .then(({ collections: cols }) => {
-        setCollections(cols);
-      })
-      .catch(() => {});
-  }, []);
-
-  // Build dynamic menu with real collection
   const menu: MenuItem[] = [
-    { title: "Parfums", url: "/parfums" },
-    {
-      title: "Collections",
-      url: "/collections",
-      items: collections.map((col, idx) => {
-        const IconComp = COLLECTION_ICONS[idx % COLLECTION_ICONS.length];
-        return {
-          title: col.title,
-          description:
-            (col.metadata?.description as string) ||
-            `Découvrez notre collection ${col.title}`,
-          icon: <IconComp className="size-5" />,
-          url: `/parfums?collection=${col.handle}`,
-        };
-      }),
-    },
-    { title: "Notre histoire", url: "/notre-histoire" },
+    { title: "Produits", url: "/parfums" },
+    { title: "À propos", url: "/notre-histoire" },
+    { title: "Blogs", url: "/blog" },
+    { title: "Contact", url: "/contact" },
   ];
 
   if (!mounted) return null;
@@ -167,28 +121,18 @@ export default function Navbar({
         >
           {/* Logo */}
           <div className="flex min-w-0 flex-1 justify-start">
-            <Link href={logo.url} className="group flex items-center gap-3">
-              <div
+            <Link href={logo.url} className="group flex items-center">
+              <Image
+                src={logo.src}
+                alt={logo.alt}
+                width={300}
+                height={100}
+                priority
                 className={cn(
-                  "relative h-10 w-10 overflow-hidden rounded-full border border-zinc-100 shadow-sm transition-all duration-700 sm:h-14 sm:w-14",
-                  isScrolled ? "sm:h-10 sm:w-10" : "",
+                  "w-auto object-contain transition-all duration-700",
+                  isScrolled ? "h-8" : "h-9 sm:h-11",
                 )}
-              >
-                <Image
-                  fill
-                  src={logo.src}
-                  className="object-cover"
-                  alt={logo.alt}
-                />
-              </div>
-              <span
-                className={cn(
-                  "hidden font-serif font-light tracking-[0.35em] transition-all duration-700 sm:block",
-                  isScrolled ? "text-xl" : "text-2xl",
-                )}
-              >
-                SILLAGE
-              </span>
+              />
             </Link>
           </div>
 
@@ -198,10 +142,7 @@ export default function Navbar({
               {menu.map((item) => (
                 <li key={item.title}>
                   {item.items ? (
-                    <MenuWithSubItems
-                      item={item}
-                      pathname={pathname}
-                    />
+                    <MenuWithSubItems item={item} pathname={pathname} />
                   ) : (
                     <Link
                       href={item.url}
@@ -439,24 +380,23 @@ function MobileMenu({
         <SheetHeader className="border-b p-6 text-left sm:p-8">
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <div className="flex items-center justify-between">
-            <Link href="/" onClick={close} className="flex items-center gap-3">
-              <div className="relative h-12 w-12 overflow-hidden rounded-full border">
-                <Image
-                  src={logo.src}
-                  alt="logo"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <span className="font-serif text-2xl tracking-[0.2em]">
-                SILLAGE
-              </span>
+            <Link href="/" onClick={close} className="flex items-center">
+              <Image
+                src={logo.src}
+                alt={logo.title}
+                width={300}
+                height={100}
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             <Button
               variant="ghost"
               size="icon"
               className="rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              onClick={() => { close(); onOpenSearch(); }}
+              onClick={() => {
+                close();
+                onOpenSearch();
+              }}
             >
               <Search className="size-5" />
             </Button>
@@ -572,14 +512,18 @@ function MobileMenu({
               className="w-full rounded-full h-14 font-bold text-xs uppercase tracking-widest"
               variant="outline"
             >
-              <Link href="/compte" onClick={close}>Mon Espace</Link>
+              <Link href="/compte" onClick={close}>
+                Mon Espace
+              </Link>
             </Button>
           ) : (
             <Button
               asChild
               className="w-full rounded-full h-14 font-bold text-xs uppercase tracking-widest"
             >
-              <Link href="/auth" onClick={close}>Connexion</Link>
+              <Link href="/auth" onClick={close}>
+                Connexion
+              </Link>
             </Button>
           )}
         </div>
@@ -685,13 +629,13 @@ function SearchDialog({
                 </div>
                 <div className="text-sm font-bold shrink-0">
                   {product.variants?.[0]?.calculated_price?.calculated_amount
-                    ? (
-                        product.variants[0].calculated_price.calculated_amount /
-                        100
-                      ).toLocaleString("fr-FR", {
-                        style: "currency",
-                        currency: "EUR",
-                      })
+                    ? product.variants[0].calculated_price.calculated_amount.toLocaleString(
+                        "fr-FR",
+                        {
+                          style: "currency",
+                          currency: "XOF",
+                        },
+                      )
                     : "—"}
                 </div>
               </button>
